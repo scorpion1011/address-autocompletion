@@ -1,31 +1,26 @@
 jQuery(function() {
-	jQuery('#billing_city').on('input', function() {
+	function dataRequest(sender) {
 		var data = {
-		action: 'action',
-		city: jQuery(this).val(),
-		zip: jQuery('#billing_postcode').val(),
-		sender: 'city'
+			action: 'action',
+			address: jQuery('#billing_address_1').val(),
+			city: jQuery('#billing_city').val(),
+			zip: jQuery('#billing_postcode').val(),
+			sender: sender
 		};
-
+		
 		jQuery.get( myPlugin.ajaxurl, data, function(response) {
 			alert(response);
 		});
+	}
+	jQuery('#billing_city').on('input', function() {
+		dataRequest('city');
 	});
 	
-	//jQuery('#billing_country').on('change', function() {
-	//	alert("222");
-	//});
+	jQuery('#billing_address_1').on('change', function() {
+		dataRequest('address');
+	});
 	
 	jQuery('#billing_postcode').on('input', function() {
-		var data = {
-		action: 'action',
-		zip: jQuery(this).val(),
-		city: jQuery('#billing_city').val(),
-		sender: 'zip'
-		};
-
-		jQuery.get( myPlugin.ajaxurl, data, function(response) {
-			alert(response);
-		});
+		dataRequest('zip');
 	});
 });
