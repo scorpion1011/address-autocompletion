@@ -3,6 +3,7 @@ jQuery(function() {
 		var data = {
 		action: 'action',
 		city: jQuery(this).val(),
+		zip: jQuery('#billing_postcode').val(),
 		sender: 'city'
 		};
 
@@ -19,6 +20,7 @@ jQuery(function() {
 		var data = {
 		action: 'action',
 		zip: jQuery(this).val(),
+		city: jQuery('#billing_city').val(),
 		sender: 'zip'
 		};
 
