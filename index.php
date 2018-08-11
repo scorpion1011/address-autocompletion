@@ -14,7 +14,7 @@ function link_script()
     // For either a plugin or a theme, you can then enqueue the script:
     ///wp_enqueue_script( 'custom-script' );
 
-	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/adress_correction.js', array('jquery') );
+	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress_correction.js', array('jquery') );
 
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
