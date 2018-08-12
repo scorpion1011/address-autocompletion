@@ -39,29 +39,23 @@ function my_action_callback()
 	switch($sender)
 	{
 		case 'city':
-			$data = json_decode('[{"city": "Daaden","postCode": "57567"},{"city": "Daasdorf a Berge","postCode": "99428"},{"city": "Daasdorf b Buttelstedt","postCode": "99439"},{"city": "Dabel","postCode": "19406"},{"city": "Dabergotz","postCode": "16818"},{"city": "Daberkow","postCode": "17129"},{"city": "Dachau","postCode": "85221"},{"city": "Dachrieden","postCode": "99974"},{"city": "Dachsbach","postCode": "91462"},{"city": "Dachsberg","postCode": "79875"}]');
-// 			$city =  empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
-// 			if(!empty($city))
-// 			{
-// 				$postCodeExpansionRequest->setCity($city);
-// 			}
+			$city =  empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
+			if(!empty($city))
+			{
+				$cityExpansionRequest = new EnderecoCityExpansionRequest();
+				$cityExpansionRequest->setCity($city);
+
+				$data = getEndercoData($cityExpansionRequest);
+			}
 			break;
 		case 'zip':
 			$zip = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
 			if(!empty($zip))
 			{
-				$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
-
 				$postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
 				$postCodeExpansionRequest->setPostcode($zip);
 
-				foreach($client->executeRequest($postCodeExpansionRequest)->getElements() as $expansion)
-				{
-					$data[] = [
-							'postcode' => $expansion->getPostCode(),
-							'city'     => $expansion->getCity(),
-						];
-				}
+				$data = getEndercoData($postCodeExpansionRequest);
 			}
 			break;
 		case 'address':
@@ -72,3 +66,27 @@ function my_action_callback()
 
 	wp_die();
 }
+
+/**
+ * Request for Endereco data
+ * @param EnderecoAbstractRequest $expansionRequest
+ * @return Array
+ */
+
+function getEndercoData($expansionRequest)
+{
+	$data = [];
+
+	$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
+
+	foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
+	{
+		$data[] = [
+				'postcode' => $expansion->getPostCode(),
+				'city'     => $expansion->getCity(),
+			];
+	}
+
+	return $data;
+}
+
