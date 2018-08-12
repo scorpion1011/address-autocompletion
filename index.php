@@ -10,7 +10,7 @@ function link_script()
 	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress_correction.js', array('jquery') );
 	wp_enqueue_style( 'autocomplete.css', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.css' );
 	wp_enqueue_script( 'autocomplete', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.min.js' );
-	
+
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
 			'ajaxurl' => admin_url('admin-ajax.php')
@@ -57,7 +57,7 @@ function my_action_callback()
 			$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
 			$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
 			$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
-			if(!empty($zip) && !empty($city) && !empty($zip))
+			if(!empty($zip) && !empty($city) && !empty($address))
 			{
 				$streetExpansionRequest = new EnderecoStreetExpansionRequest();
 				$streetExpansionRequest->setPostcode($zip);
@@ -100,10 +100,15 @@ function getEndercoData($expansionRequest)
 		}
 		else //OrwellInputAssistantPostCodeCityExpansionResultElement
 		{
-			$data[] = [
-					'postcode' => $expansion->getPostCode(),
-					'city'     => $expansion->getCity(),
+			$postCode = $expansion->getPostCode();
+			$city     = $expansion->getCity();
+			if(!empty($postCode) || !empty($city))
+			{
+				$data[] = [
+					'postcode' => $postCode,
+					'city'     => $city,
 				];
+			}
 		}
 	}
 
