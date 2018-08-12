@@ -59,5 +59,17 @@ jQuery(function() {
 	jQuery('#billing_city')     .autoComplete(autoCompleteConfig('city'));
 	jQuery('#billing_postcode') .autoComplete(autoCompleteConfig('zip'));
 	jQuery('#billing_address_1').autoComplete(autoCompleteConfig('address'));
+	
+	jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function(event) {
+	    if (1 /* your condition, e.g. "$payment_method == 'paypal'" */ ) {
+	        // prevent the submit AJAX call
+	        alert( 'submit cancelled!' );
+	        // @todo: !! test in different browsers !!
+			event.stopImmediatePropagation()
+	        return false;
+	    }
+	    // allow the submit AJAX call
+	    return true;
+	});
 
 });
