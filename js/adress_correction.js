@@ -16,7 +16,7 @@ jQuery(function() {
 		dataRequest('city');
 	});
 	
-	jQuery('#billing_address_1').on('change', function() {
+	jQuery('#billing_address_1').on('input', function() {
 		dataRequest('address');
 	});
 	

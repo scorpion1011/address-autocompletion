@@ -39,7 +39,7 @@ function my_action_callback()
 	switch($sender)
 	{
 		case 'city':
-			$city =  empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
+			$city = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
 			if(!empty($city))
 			{
 				$cityExpansionRequest = new EnderecoCityExpansionRequest();
@@ -59,9 +59,21 @@ function my_action_callback()
 			}
 			break;
 		case 'address':
-			$data = json_decode('[{"street": "Eisenlohrsweg"},{"street": "Eppendorfer Baum"},{"street": "Eppendorfer Landstr."}]');
+			$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
+			$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
+			$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
+			if(!empty($zip) && !empty($city) && !empty($zip))
+			{
+				$streetExpansionRequest = new EnderecoStreetExpansionRequest();
+				$streetExpansionRequest->setPostcode($zip);
+				$streetExpansionRequest->setCity($city);
+				$streetExpansionRequest->setStreet($address);
+
+				$data = getEndercoData($streetExpansionRequest);
+			}
 			break;
 	}
+
 	echo json_encode($data);
 
 	wp_die();
@@ -81,10 +93,23 @@ function getEndercoData($expansionRequest)
 
 	foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
 	{
-		$data[] = [
-				'postcode' => $expansion->getPostCode(),
-				'city'     => $expansion->getCity(),
-			];
+		if($expansion instanceof OrwellInputAssistantStreetExpansionResultElement)
+		{
+			$street = $expansion->getStreet();
+			if(!empty($street))
+			{
+				$data[] = [
+					'street' => $street
+				];
+			}
+		}
+		else //OrwellInputAssistantPostCodeCityExpansionResultElement
+		{
+			$data[] = [
+					'postcode' => $expansion->getPostCode(),
+					'city'     => $expansion->getCity(),
+				];
+		}
 	}
 
 	return $data;
