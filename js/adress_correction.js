@@ -1,5 +1,6 @@
 jQuery(function() {
-	
+	var addressConfirmed = false;
+	var postCode_CityConfirmed = false;
 	function needRequest(data) {
 		if('city' == data.sender) {
 			return data.city.length > 0;
@@ -24,8 +25,28 @@ jQuery(function() {
 				if(needRequest(data)) {
 					jQuery.get(myPlugin.ajaxurl, data, function(response) {
 						var arrayOfObjectProperty = [];
-
-						jQuery.each(jQuery.parseJSON(response), function(key, value) {
+						var jsonObj = jQuery.parseJSON(response);
+						
+						//TODO короче фигня такое разделение JSON'а. если кекс поменяет адресс и флаг станет тру, то поменяв зип/город адресс должен стать недействительным и мы его должны снова проверять, но в респонсе адресса уже не приедут и нужен повторный запрос. ВСПОМНИТЬ НЕ УДАЛЯТЬ СЛУЧАЙНО !!!!
+						if ('zip' == sender || 'city' == sender) {
+							if (Object.values(jsonObj).indexOf(jQuery('#billing_city').val()) == Object.values(jsonObj).indexOf(jQuery(		'#billing_postcode').val())) {
+								postCode_CityConfirmed = true;
+							}
+							else {
+								postCode_CityConfirmed = false;
+							}
+						}
+						
+						if ('address' == sender) {
+							if (Object.values(jsonObj).indexOf(jQuery('#billing_address_1').val()) > -1) {
+								addressConfirmed = true;
+							}
+							else {
+								addressConfirmed = false;
+							}
+						}
+						
+						jQuery.each(jsonObj, function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
 	
@@ -47,10 +68,12 @@ jQuery(function() {
 			onSelect: function(e, term, item){
 				if('address' == sender) {
 					jQuery('#billing_address_1').val(jQuery(item).attr("data-street"));
+					addressConfirmed = true;
 				}
 				else {
 					jQuery('#billing_city').val(jQuery(item).attr("data-city"));
 					jQuery('#billing_postcode').val(jQuery(item).attr("data-postcode"));
+					postCode_CityConfirmed = true;
 				}
 			}
 		};
@@ -61,15 +84,13 @@ jQuery(function() {
 	jQuery('#billing_address_1').autoComplete(autoCompleteConfig('address'));
 	
 	jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function(event) {
-	    if (1 /* your condition, e.g. "$payment_method == 'paypal'" */ ) {
-	        // prevent the submit AJAX call
-	        alert( 'submit cancelled!' );
-	        // @todo: !! test in different browsers !!
-			event.stopImmediatePropagation()
-	        return false;
+	    if (addressConfirmed && postCode_CityConfirmed) {
+	        return true;
 	    }
 	    // allow the submit AJAX call
-	    return true;
+		alert( 'submit cancelled!' );
+		event.stopImmediatePropagation()
+	    return false;
 	});
 
 });
