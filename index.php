@@ -32,44 +32,36 @@ function my_action_callback()
 
 	// 	$firstname = empty( $_GET['firstname'] ) ? '' : esc_attr( $_GET['firstname'] );
 
+	$data = [];
+
 	$sender =  empty( $_GET['sender'] ) ? '' : esc_attr( $_GET['sender'] );
 
 	switch($sender)
 	{
 		case 'city':
 			$data = json_decode('[{"city": "Daaden","postCode": "57567"},{"city": "Daasdorf a Berge","postCode": "99428"},{"city": "Daasdorf b Buttelstedt","postCode": "99439"},{"city": "Dabel","postCode": "19406"},{"city": "Dabergotz","postCode": "16818"},{"city": "Daberkow","postCode": "17129"},{"city": "Dachau","postCode": "85221"},{"city": "Dachrieden","postCode": "99974"},{"city": "Dachsbach","postCode": "91462"},{"city": "Dachsberg","postCode": "79875"}]');
-			break;
-		case 'zip':
-// 			$data = json_decode('[{"city": "Daaden","postCode": "57567"},{"city": "Daasdorf a Berge","postCode": "99428"},{"city": "Daasdorf b Buttelstedt","postCode": "99439"},{"city": "Dabel","postCode": "19406"},{"city": "Dabergotz","postCode": "16818"},{"city": "Daberkow","postCode": "17129"},{"city": "Dachau","postCode": "85221"},{"city": "Dachrieden","postCode": "99974"},{"city": "Dachsbach","postCode": "91462"},{"city": "Dachsberg","postCode": "79875"}]');
-			$zip = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
 // 			$city =  empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
-
-			$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
-			$postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
-
-
-			// 	$postCodeExpansionRequest->setPostcode('972');
-			// 		->setCity('Randersacker')
-			// 		->setHousenumber('4b')
-			// 		->setStreet('Balthasar-Neumann-Straße');
-
-
-			if(!empty($zip))
-			{
-				$postCodeExpansionRequest->setPostcode($zip);
-			}
 // 			if(!empty($city))
 // 			{
 // 				$postCodeExpansionRequest->setCity($city);
 // 			}
-			$result = $client->executeRequest($postCodeExpansionRequest);
-			$data = [];
-			foreach($result->getElements() as $correction)
+			break;
+		case 'zip':
+			$zip = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
+			if(!empty($zip))
 			{
-				$data[] = [
-						'postcode' => $correction->getPostCode(),
-						'city'     => $correction->getCity(),
-					];
+				$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
+
+				$postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
+				$postCodeExpansionRequest->setPostcode($zip);
+
+				foreach($client->executeRequest($postCodeExpansionRequest)->getElements() as $expansion)
+				{
+					$data[] = [
+							'postcode' => $expansion->getPostCode(),
+							'city'     => $expansion->getCity(),
+						];
+				}
 			}
 			break;
 		case 'address':
@@ -77,10 +69,6 @@ function my_action_callback()
 			break;
 	}
 	echo json_encode($data);
-
-// 	$result = '[{"zip":"' . $zip . '";"city":"' . $city . '";"firstname":"' . $firstname . '";"sender":"' . $sender . '"}]';
-
-// 	echo $result;
 
 	wp_die();
 }
