@@ -7,15 +7,10 @@
 add_action( 'wp_enqueue_scripts', 'link_script' );
 function link_script()
 {
-    // Register the script like this for a plugin:
-    ///wp_register_script( 'custom-script', plugins_url() . '/adress_autocompletion/adress_correction.js' );
-
-	///wp_enqueue_script('jquery');
-    // For either a plugin or a theme, you can then enqueue the script:
-    ///wp_enqueue_script( 'custom-script' );
-
 	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress_correction.js', array('jquery') );
-
+	wp_enqueue_style( 'autocomplete.css', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.css' );
+	wp_enqueue_script( 'autocomplete', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.min.js' );
+	
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
 			'ajaxurl' => admin_url('admin-ajax.php')

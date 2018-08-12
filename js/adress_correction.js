@@ -9,7 +9,49 @@ jQuery(function() {
 		};
 		
 		jQuery.get( myPlugin.ajaxurl, data, function(response) {
-			alert(response);
+			var arrayOfObjectProperty = [];
+			var obj = jQuery.parseJSON(response);
+			var htmlElement;
+			if (sender == 'city'){
+				htmlElement = '#billing_city';
+				jQuery.each( obj, function( key, value ) {
+					if (key = 'city')
+					{
+						arrayOfObjectProperty[arrayOfObjectProperty.length] = value.city;
+					}
+				});
+			}
+			else if (sender == 'address'){
+				htmlElement = '#billing_address_1';
+				jQuery.each( obj, function( key, value ) {
+					if (key = 'street')
+					{
+						arrayOfObjectProperty[arrayOfObjectProperty.length] = value.street;
+					}
+				});
+			}
+			else if (sender == 'zip'){
+				htmlElement = '#billing_postcode';
+				jQuery.each( obj, function( key, value ) {
+					if (key = 'postCode')
+					{
+						arrayOfObjectProperty[arrayOfObjectProperty.length] = value.postcode;
+					}
+				});
+			}
+			jQuery(htmlElement).autoComplete({
+				minChars: 0,
+				source: function(input, suggests) {
+					input = input.toLowerCase();
+					var matches = [];
+					for (i=0; i<arrayOfObjectProperty.length; i++) {
+						if (~arrayOfObjectProperty[i].toLowerCase().indexOf(input)){
+							matches.push(arrayOfObjectProperty[i])
+						};
+					}
+					suggests(matches);
+				}
+			});
 		});
 	}
 	jQuery('#billing_city').on('input', function() {
