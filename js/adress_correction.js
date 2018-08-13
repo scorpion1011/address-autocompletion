@@ -84,13 +84,52 @@ jQuery(function() {
 	jQuery('#billing_address_1').autoComplete(autoCompleteConfig('address'));
 	
 	jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function(event) {
-	    if (addressConfirmed && postCode_CityConfirmed) {
-	        return true;
-	    }
-	    // allow the submit AJAX call
-		alert( 'submit cancelled!' );
-		event.stopImmediatePropagation()
-	    return false;
+		if (addressConfirmed && postCode_CityConfirmed) {
+			// allow the submit AJAX call
+			return true;
+		}
+		
+		var data = {
+				action: 'action',
+				address: jQuery('#billing_address_1').val(),
+				city: jQuery('#billing_city').val(),
+				zip: jQuery('#billing_postcode').val(),
+				sender: 'submit'
+			};
+
+		jQuery.get(myPlugin.ajaxurl, data, function(response) {
+
+			var jsonObj = jQuery.parseJSON(response);
+
+			if(jsonObj.length){
+				jQuery('#enderecoCorrectedSuggestions').empty();
+				jQuery.each(jsonObj, function(key, value) {
+					jQuery('#enderecoCorrectedSuggestions').append('<label><input type="radio" name="addressCorrection" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
+				});
+				jQuery('.could-not-find-corrections').hide();
+				jQuery('#enderecoCorrectedSuggestions').show();
+			}
+			else {
+				jQuery('#enderecoCorrectedSuggestions').hide();
+				jQuery('.could-not-find-corrections').show();
+			}
+
+			jQuery('#enderecoCurrentInput').html('<label><input type="radio" name="addressCorrection" data-id="0" checked="checked">' + jQuery('#billing_postcode').val() + ' ' + jQuery('#billing_city').val() + ' ' + jQuery('#billing_address_1').val() + '</label><br />');
+			jQuery('#enderecoAddressCheckModal').modal('show');
+			
+		});
+
+		event.stopImmediatePropagation();
+		return false;
+	});
+	
+	
+	jQuery('#enderecoAddressCheckSubmit').click(function(){
+		// update form fields if data-id <> 0
+		// submit checkout
+		addressConfirmed = postCode_CityConfirmed = true;
+		jQuery('#enderecoAddressCheckModal').modal('hide');
+		jQuery('form.checkout.woocommerce-checkout').submit();
 	});
 
 });

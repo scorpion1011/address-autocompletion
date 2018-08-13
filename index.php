@@ -8,8 +8,12 @@ add_action( 'wp_enqueue_scripts', 'link_script' );
 function link_script()
 {
 	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress_correction.js', array('jquery') );
+
 	wp_enqueue_style( 'autocomplete.css', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.css' );
 	wp_enqueue_script( 'autocomplete', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.min.js' );
+
+	wp_enqueue_style( 'bootstrap.min.css', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
+	wp_enqueue_script( 'bootstrap.min.js', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
@@ -20,6 +24,12 @@ function link_script()
 
 add_action('wp_ajax_action', 'my_action_callback');
 add_action('wp_ajax_nopriv_action', 'my_action_callback');
+add_action('wp_footer', 'add_bootstrap_modale_template');
+
+function add_bootstrap_modale_template()
+{
+	require_once __DIR__.'/modal.php';
+}
 
 function my_action_callback()
 {
@@ -54,6 +64,7 @@ function my_action_callback()
 			}
 			break;
 		case 'address':
+		case 'submit':
 			$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
 			$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
 			$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
@@ -79,7 +90,6 @@ function my_action_callback()
  * @param EnderecoAbstractRequest $expansionRequest
  * @return Array
  */
-
 function getEndercoData($expansionRequest)
 {
 	$data = [];
@@ -90,10 +100,14 @@ function getEndercoData($expansionRequest)
 	{
 		if($expansion instanceof OrwellInputAssistantStreetExpansionResultElement)
 		{
+			$postCode = $expansion->getPostCode();
+			$city     = $expansion->getCity();
 			$street = $expansion->getStreet();
 			if(!empty($street))
 			{
 				$data[] = [
+					'postcode' => $postCode,
+					'city'     => $city,
 					'street' => $street
 				];
 			}
