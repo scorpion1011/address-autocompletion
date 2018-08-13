@@ -26,26 +26,6 @@ jQuery(function() {
 					jQuery.get(myPlugin.ajaxurl, data, function(response) {
 						var arrayOfObjectProperty = [];
 						var jsonObj = jQuery.parseJSON(response);
-						
-						//TODO короче фигня такое разделение JSON'а. если кекс поменяет адресс и флаг станет тру, то поменяв зип/город адресс должен стать недействительным и мы его должны снова проверять, но в респонсе адресса уже не приедут и нужен повторный запрос. ВСПОМНИТЬ НЕ УДАЛЯТЬ СЛУЧАЙНО !!!!
-						if ('zip' == sender || 'city' == sender) {
-							if (Object.values(jsonObj).indexOf(jQuery('#billing_city').val()) == Object.values(jsonObj).indexOf(jQuery(		'#billing_postcode').val())) {
-								postCode_CityConfirmed = true;
-							}
-							else {
-								postCode_CityConfirmed = false;
-							}
-						}
-						
-						if ('address' == sender) {
-							if (Object.values(jsonObj).indexOf(jQuery('#billing_address_1').val()) > -1) {
-								addressConfirmed = true;
-							}
-							else {
-								addressConfirmed = false;
-							}
-						}
-						
 						jQuery.each(jsonObj, function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
@@ -78,6 +58,20 @@ jQuery(function() {
 			}
 		};
 	}
+	
+	jQuery('#billing_city').on('input', function() {
+		postCode_CityConfirmed = false;
+		addressConfirmed = false;
+	});
+	
+	jQuery('#billing_postcode').on('input', function() {
+		postCode_CityConfirmed = false;
+		addressConfirmed = false;
+	});
+	
+	jQuery('#billing_address_1').on('input', function() {
+		addressConfirmed = false;
+	});
 
 	jQuery('#billing_city')     .autoComplete(autoCompleteConfig('city'));
 	jQuery('#billing_postcode') .autoComplete(autoCompleteConfig('zip'));
@@ -123,7 +117,7 @@ jQuery(function() {
 		return false;
 	});
 	
-	
+	// 1) онклик смена формы + правильная информация на сервер 2) при тру флагах сабмитить форму не выплевывая всплывающего окна 3) оптимизация запросов 4) добить флаги
 	jQuery('#enderecoAddressCheckSubmit').click(function(){
 		// update form fields if data-id <> 0
 		// submit checkout
