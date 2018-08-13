@@ -13,7 +13,6 @@
 					<div id="enderecoCurrentInput" class="form-group"></div>
 					<span class="description-text">Unsere Vorschläge</span>
 					<div id="enderecoCorrectedSuggestions" class="form-group"></div>
-					<div class="could-not-find-corrections">Die eingegebene Adresse konnte nicht gefunden werden. Bitte überprüfen sie ihre Eingabe erneut. Wenn Sie sich dennoch sicher sind, das die Eingabe korrekt ist, fahren sie einfach fort.</div>
 				</div>
 			</div>
 			<div class="modal-footer">

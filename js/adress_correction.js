@@ -98,55 +98,60 @@ jQuery(function() {
 			};
 
 		jQuery.get(myPlugin.ajaxurl, data, function(response) {
-
-			var jsonObj = jQuery.parseJSON(response);
-
-			if(jsonObj.length){
-				jQuery('#enderecoCorrectedSuggestions').empty();
-				jQuery.each(jsonObj, function(key, value) {
-					jQuery('#enderecoCorrectedSuggestions').append('<label><input type="radio" name="addressCorrection" data-city="' + value.city + '" data-postcode="' + value.postcode + '" data-address="' + value.street + '" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
-				});
-				jQuery('.could-not-find-corrections').hide();
-				jQuery('#enderecoCorrectedSuggestions').show();
-			}
-			else {
-				jQuery('#enderecoCorrectedSuggestions').hide();
-				jQuery('.could-not-find-corrections').show();
-			}
-
+			var isNeededToShow = true;
 			var city = jQuery('#billing_city').val();
 			var postcode = jQuery('#billing_postcode').val();
 			var address = jQuery('#billing_address_1').val();
-			jQuery('#enderecoCurrentInput').html('<label><input type="radio" name="addressCorrection" data-city="' + city + '" data-postcode="' + postcode + '" data-address="' + address + '" data-id="0" checked="checked">' + postcode + ' ' + city + ' ' + address + '</label><br />');
-			jQuery('#enderecoAddressCheckModal').modal('show');
+			var jsonObj = jQuery.parseJSON(response);
 			
+			if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == city && jsonObj[0].postcode == postcode  && jsonObj[0].street == address ) {
+				addressConfirmed = postCode_CityConfirmed = true;
+				jQuery('form.checkout.woocommerce-checkout').submit();
+				return;
+			}
+
+			jQuery('#enderecoCorrectedSuggestions').empty();
+			jQuery.each(jsonObj, function(key, value) {
+				jQuery('#enderecoCorrectedSuggestions').append('<label><input type="radio" name="addressCorrection" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
+				jQuery( 'input', '#enderecoCorrectedSuggestions' ).last().attr({
+					'data-city': value.city,
+					'data-postcode': value.postcode,
+					'data-address': value.street
+				});
+			});
+			jQuery('#enderecoCurrentInput').html('<label><input type="radio" name="addressCorrection" data-id="0" checked="checked">' + postcode + ' ' + city + ' ' + address + '</label><br />');
+			jQuery( 'input', '#enderecoCorrectedSuggestions' ).last().attr({
+				'data-city': city,
+				'data-postcode': postcode,
+				'data-address': address
+			});
+			jQuery('#enderecoAddressCheckModal').modal('show');
 		});
 
 		event.stopImmediatePropagation();
 		return false;
 	});
 	
-	// 3) оптимизация запросов
+	// 1) надо убедиться, надо ли эскейпить атрибуты 2)дублирование строк в сабмите
 	jQuery('#enderecoAddressCheckSubmit').click(function(){
-		if (addressConfirmed == true && postCode_CityConfirmed == true) {
-			jQuery('#enderecoAddressCheckModal').modal('hide');
-			jQuery('form.checkout.woocommerce-checkout').submit();
-		}
-		else {
-			var allRadio = document.getElementsByName('addressCorrection');
-			
-			allRadio.forEach(function(node) {
-				if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
-					jQuery('#billing_city').val(jQuery(node).attr('data-city'));
-					jQuery('#billing_postcode').val(jQuery(node).attr('data-postcode'));
-					jQuery('#billing_address_1').val(jQuery(node).attr('data-address'));
-				}
-			});
-			
-			addressConfirmed = postCode_CityConfirmed = true;
-			jQuery('#enderecoAddressCheckModal').modal('hide');
-			jQuery('form.checkout.woocommerce-checkout').submit();
-		}
+		var allRadio = document.getElementsByName('addressCorrection');
+		
+		allRadio.forEach(function(node) {
+			if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
+				jQuery('#billing_city').val(jQuery(node).attr('data-city'));
+				jQuery('#billing_postcode').val(jQuery(node).attr('data-postcode'));
+				jQuery('#billing_address_1').val(jQuery(node).attr('data-address'));
+			}
+		});
+		
+		addressConfirmed = postCode_CityConfirmed = true;
+		jQuery('#enderecoAddressCheckModal').modal('hide');
+		jQuery('form.checkout.woocommerce-checkout').submit();
 	});
-
+	
+	function htmlEncode(value){
+		// Create a in-memory div, set its inner text (which jQuery automatically encodes)
+		// Then grab the encoded contents back out. The div never exists on the page.
+		return jQuery('<div/>').text(value).html();
+	}
 });
