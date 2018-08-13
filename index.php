@@ -39,12 +39,14 @@ function my_action_callback()
 
 	$data = [];
 
-	$sender =  empty( $_GET['sender'] ) ? '' : esc_attr( $_GET['sender'] );
+	$sender  = empty( $_GET['sender'] ) ? '' : esc_attr( $_GET['sender'] );
+	$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
+	$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
+	$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
 
 	switch($sender)
 	{
 		case 'city':
-			$city = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
 			if(!empty($city))
 			{
 				$cityExpansionRequest = new EnderecoCityExpansionRequest();
@@ -54,7 +56,6 @@ function my_action_callback()
 			}
 			break;
 		case 'zip':
-			$zip = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
 			if(!empty($zip))
 			{
 				$postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
@@ -64,10 +65,6 @@ function my_action_callback()
 			}
 			break;
 		case 'address':
-		case 'submit':
-			$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
-			$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
-			$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
 			if(!empty($zip) && !empty($city) && !empty($address))
 			{
 				$streetExpansionRequest = new EnderecoStreetExpansionRequest();
@@ -77,6 +74,14 @@ function my_action_callback()
 
 				$data = getEndercoData($streetExpansionRequest);
 			}
+			break;
+		case 'submit':
+			$addressCheckRequest = new EnderecoAddressCheckRequest();
+			$addressCheckRequest->setPostcode($zip);
+			$addressCheckRequest->setCity($city);
+			$addressCheckRequest->setStreet($address);
+
+			$data = getEndercoData($addressCheckRequest);
 			break;
 	}
 
@@ -98,21 +103,7 @@ function getEndercoData($expansionRequest)
 
 	foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
 	{
-		if($expansion instanceof OrwellInputAssistantStreetExpansionResultElement)
-		{
-			$postCode = $expansion->getPostCode();
-			$city     = $expansion->getCity();
-			$street = $expansion->getStreet();
-			if(!empty($street))
-			{
-				$data[] = [
-					'postcode' => $postCode,
-					'city'     => $city,
-					'street' => $street
-				];
-			}
-		}
-		else //OrwellInputAssistantPostCodeCityExpansionResultElement
+		if($expansion instanceof OrwellInputAssistantPostCodeCityExpansionResultElement)
 		{
 			$postCode = $expansion->getPostCode();
 			$city     = $expansion->getCity();
@@ -121,6 +112,20 @@ function getEndercoData($expansionRequest)
 				$data[] = [
 					'postcode' => $postCode,
 					'city'     => $city,
+				];
+			}
+		}
+		else //OrwellInputAssistantStreetExpansionResultElement || EnderecoAddressCheckRequest
+		{
+			$postCode = $expansion->getPostCode();
+			$city     = $expansion->getCity();
+			$street = $expansion->getStreet();
+			if(!empty($postCode) || !empty($city) || !empty($street))
+			{
+				$data[] = [
+					'postcode' => $postCode,
+					'city'     => $city,
+					'street'   => $street
 				];
 			}
 		}
