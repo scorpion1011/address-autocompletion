@@ -1,6 +1,7 @@
 jQuery(function() {
 	var addressConfirmed = false;
 	var postCode_CityConfirmed = false;
+	var xhr;
 	function needRequest(data) {
 		if('city' == data.sender) {
 			return data.city.length > 0;
@@ -15,6 +16,11 @@ jQuery(function() {
 		return {
 			minChars: 0,
 			source: function(input, suggests) {
+				try { 
+					xhr.abort(); 
+				} 
+				catch(e){
+				}
 				var data = {
 					action: 'action',
 					address: jQuery('#billing_address_1').val(),
@@ -23,7 +29,7 @@ jQuery(function() {
 					sender: sender
 				};
 				if(needRequest(data)) {
-					jQuery.get(myPlugin.ajaxurl, data, function(response) {
+					xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
 						var arrayOfObjectProperty = [];
 						var jsonObj = jQuery.parseJSON(response);
 						jQuery.each(jsonObj, function(key, value) {
@@ -98,7 +104,7 @@ jQuery(function() {
 			if(jsonObj.length){
 				jQuery('#enderecoCorrectedSuggestions').empty();
 				jQuery.each(jsonObj, function(key, value) {
-					jQuery('#enderecoCorrectedSuggestions').append('<label><input type="radio" name="addressCorrection" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
+					jQuery('#enderecoCorrectedSuggestions').append('<label><input type="radio" name="addressCorrection" data-city="' + value.city + '" data-postcode="' + value.postcode + '" data-address="' + value.street + '" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
 				});
 				jQuery('.could-not-find-corrections').hide();
 				jQuery('#enderecoCorrectedSuggestions').show();
@@ -108,7 +114,10 @@ jQuery(function() {
 				jQuery('.could-not-find-corrections').show();
 			}
 
-			jQuery('#enderecoCurrentInput').html('<label><input type="radio" name="addressCorrection" data-id="0" checked="checked">' + jQuery('#billing_postcode').val() + ' ' + jQuery('#billing_city').val() + ' ' + jQuery('#billing_address_1').val() + '</label><br />');
+			var city = jQuery('#billing_city').val();
+			var postcode = jQuery('#billing_postcode').val();
+			var address = jQuery('#billing_address_1').val();
+			jQuery('#enderecoCurrentInput').html('<label><input type="radio" name="addressCorrection" data-city="' + city + '" data-postcode="' + postcode + '" data-address="' + address + '" data-id="0" checked="checked">' + postcode + ' ' + city + ' ' + address + '</label><br />');
 			jQuery('#enderecoAddressCheckModal').modal('show');
 			
 		});
@@ -117,13 +126,27 @@ jQuery(function() {
 		return false;
 	});
 	
-	// 1) онклик смена формы + правильная информация на сервер 2) при тру флагах сабмитить форму не выплевывая всплывающего окна 3) оптимизация запросов 4) добить флаги
+	// 3) оптимизация запросов
 	jQuery('#enderecoAddressCheckSubmit').click(function(){
-		// update form fields if data-id <> 0
-		// submit checkout
-		addressConfirmed = postCode_CityConfirmed = true;
-		jQuery('#enderecoAddressCheckModal').modal('hide');
-		jQuery('form.checkout.woocommerce-checkout').submit();
+		if (addressConfirmed == true && postCode_CityConfirmed == true) {
+			jQuery('#enderecoAddressCheckModal').modal('hide');
+			jQuery('form.checkout.woocommerce-checkout').submit();
+		}
+		else {
+			var allRadio = document.getElementsByName('addressCorrection');
+			
+			allRadio.forEach(function(node) {
+				if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
+					jQuery('#billing_city').val(jQuery(node).attr('data-city'));
+					jQuery('#billing_postcode').val(jQuery(node).attr('data-postcode'));
+					jQuery('#billing_address_1').val(jQuery(node).attr('data-address'));
+				}
+			});
+			
+			addressConfirmed = postCode_CityConfirmed = true;
+			jQuery('#enderecoAddressCheckModal').modal('hide');
+			jQuery('form.checkout.woocommerce-checkout').submit();
+		}
 	});
 
 });
