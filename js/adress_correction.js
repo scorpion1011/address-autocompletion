@@ -1,14 +1,13 @@
 jQuery(function() {
-	var isConsoleResponseNeeded = myPlugin.isConsoleResponseNeeded;
 	var addressConfirmed = false;
 	var postCode_CityConfirmed = false;
 	var xhr;
 	function needRequest(data) {
 		if ( isGermany()) {
-			if('city' == data.sender && isGermany()) {
+			if('city' == data.sender) {
 				return data.city.length > 0;
 			}
-			if('zip' == data.sender && isGermany()) {
+			if('zip' == data.sender) {
 				return data.zip.length > 0;
 			}
 			return data.address.length > 0;
@@ -36,20 +35,15 @@ jQuery(function() {
 				};
 				if(needRequest(data)) {
 					xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
-						if (isConsoleResponseNeeded) {
-							console.log("Query has been sended.");
-						}
 						var arrayOfObjectProperty = [];
 						var jsonObj = jQuery.parseJSON(response);
 						jQuery.each(jsonObj, function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
 						suggests(arrayOfObjectProperty);
-						if (isConsoleResponseNeeded) {
-							console.log("Response is : " + response);
-						}
+						log("Response is : " + response);
 					});
-					
+					log("Query has been sent. " + comileUrl(data) );
 				}
 				suggests([]);
 			},
@@ -110,9 +104,6 @@ jQuery(function() {
 		};
 		
 		jQuery.get(myPlugin.ajaxurl, data, function(response) {
-			if (isConsoleResponseNeeded) {
-				console.log("Query has been sended.");
-			}
 			var isNeededToShow = true;
 			var city = jQuery('#billing_city').val();
 			var postcode = jQuery('#billing_postcode').val();
@@ -141,11 +132,9 @@ jQuery(function() {
 				'data-address': address
 			});
 			jQuery('#enderecoAddressCheckModal').modal('show');
-			if (isConsoleResponseNeeded) {
-				console.log("Response is : " + response);
-			}
+			log("Response is : " + response);
 		});
-		
+		log( "Query has been sent. " + comileUrl(data) );
 		event.stopImmediatePropagation();
 		return false;
 	});
@@ -175,5 +164,15 @@ jQuery(function() {
 	
 	function isGermany() {
 		return jQuery('#billing_country').val().toLowerCase() == "de";
+	}
+	
+	function log(message) {
+		if (myPlugin.isConsoleResponseNeeded) {
+			console.log(message);
+		}
+	}
+	
+	function comileUrl (data) {
+		return myPlugin.ajaxurl + "/" + jQuery.param( data );
 	}
 });

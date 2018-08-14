@@ -145,3 +145,48 @@ function address_autocomlpete() {
 function autocomplete_page() {
 	require_once __DIR__.'/config.php';
 }
+
+
+add_filter( 'woocommerce_settings_tabs_array', 'add_settings_tab', 50 );
+	
+function add_settings_tab( $settings_tabs ) {
+	$settings_tabs['settings_tab_demo'] = __( 'Settings Demo Tab', 'woocommerce-settings-tab-demo' );
+	return $settings_tabs;
+}
+
+add_action( 'woocommerce_settings_tabs_settings_tab_demo', 'settings_tab' );
+function settings_tab() {
+    woocommerce_admin_fields( get_setting() );
+}
+function get_setting() {
+    $settings = array(
+        'section_title' => array(
+            'name'     => __( 'Section Title', 'woocommerce-settings-tab-demo' ),
+            'type'     => 'title',
+            'desc'     => '',
+            'id'       => 'wc_settings_tab_demo_section_title'
+        ),
+        'title' => array(
+            'name' => __( 'Title', 'woocommerce-settings-tab-demo' ),
+            'type' => 'text',
+            'desc' => __( 'This is some helper text', 'woocommerce-settings-tab-demo' ),
+            'id'   => 'wc_settings_tab_demo_title'
+        ),
+        'description' => array(
+            'name' => __( 'Description', 'woocommerce-settings-tab-demo' ),
+            'type' => 'textarea',
+            'desc' => __( 'This is a paragraph describing the setting. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda.', 'woocommerce-settings-tab-demo' ),
+            'id'   => 'wc_settings_tab_demo_description'
+        ),
+        'section_end' => array(
+             'type' => 'sectionend',
+             'id' => 'wc_settings_tab_demo_section_end'
+        )
+    );
+    return apply_filters( 'wc_settings_tab_demo_settings', $settings );
+}
+
+add_action( 'woocommerce_update_options_settings_tab_demo', 'update_settings' );
+function update_settings() {
+    woocommerce_update_options( get_settings() );
+}
