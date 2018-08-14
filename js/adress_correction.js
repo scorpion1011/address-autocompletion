@@ -1,18 +1,24 @@
 jQuery(function() {
+	var isConsoleResponseNeeded = myPlugin.isConsoleResponseNeeded;
 	var addressConfirmed = false;
 	var postCode_CityConfirmed = false;
 	var xhr;
 	function needRequest(data) {
-		if('city' == data.sender) {
-			return data.city.length > 0;
+		if ( isGermany()) {
+			if('city' == data.sender && isGermany()) {
+				return data.city.length > 0;
+			}
+			if('zip' == data.sender && isGermany()) {
+				return data.zip.length > 0;
+			}
+			return data.address.length > 0;
 		}
-		if('zip' == data.sender) {
-			return data.zip.length > 0;
-		}
-		return data.address.length > 0;
+		return false;
 	}
 	
+
 	function autoCompleteConfig(sender) {
+		
 		return {
 			minChars: 0,
 			source: function(input, suggests) {
@@ -30,14 +36,20 @@ jQuery(function() {
 				};
 				if(needRequest(data)) {
 					xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
+						if (isConsoleResponseNeeded) {
+							console.log("Query has been sended.");
+						}
 						var arrayOfObjectProperty = [];
 						var jsonObj = jQuery.parseJSON(response);
 						jQuery.each(jsonObj, function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
-	
 						suggests(arrayOfObjectProperty);
+						if (isConsoleResponseNeeded) {
+							console.log("Response is : " + response);
+						}
 					});
+					
 				}
 				suggests([]);
 			},
@@ -78,26 +90,29 @@ jQuery(function() {
 	jQuery('#billing_address_1').on('input', function() {
 		addressConfirmed = false;
 	});
-
+	
 	jQuery('#billing_city')     .autoComplete(autoCompleteConfig('city'));
 	jQuery('#billing_postcode') .autoComplete(autoCompleteConfig('zip'));
 	jQuery('#billing_address_1').autoComplete(autoCompleteConfig('address'));
 	
 	jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function(event) {
-		if (addressConfirmed && postCode_CityConfirmed) {
+		if (addressConfirmed && postCode_CityConfirmed || !isGermany()) {
 			// allow the submit AJAX call
 			return true;
 		}
 		
 		var data = {
-				action: 'action',
-				address: jQuery('#billing_address_1').val(),
-				city: jQuery('#billing_city').val(),
-				zip: jQuery('#billing_postcode').val(),
-				sender: 'submit'
-			};
-
+			action: 'action',
+			address: jQuery('#billing_address_1').val(),
+			city: jQuery('#billing_city').val(),
+			zip: jQuery('#billing_postcode').val(),
+			sender: 'submit'
+		};
+		
 		jQuery.get(myPlugin.ajaxurl, data, function(response) {
+			if (isConsoleResponseNeeded) {
+				console.log("Query has been sended.");
+			}
 			var isNeededToShow = true;
 			var city = jQuery('#billing_city').val();
 			var postcode = jQuery('#billing_postcode').val();
@@ -126,8 +141,11 @@ jQuery(function() {
 				'data-address': address
 			});
 			jQuery('#enderecoAddressCheckModal').modal('show');
+			if (isConsoleResponseNeeded) {
+				console.log("Response is : " + response);
+			}
 		});
-
+		
 		event.stopImmediatePropagation();
 		return false;
 	});
@@ -153,5 +171,9 @@ jQuery(function() {
 		// Create a in-memory div, set its inner text (which jQuery automatically encodes)
 		// Then grab the encoded contents back out. The div never exists on the page.
 		return jQuery('<div/>').text(value).html();
+	}
+	
+	function isGermany() {
+		return jQuery('#billing_country').val().toLowerCase() == "de";
 	}
 });

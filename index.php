@@ -17,7 +17,8 @@ function link_script()
 
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
-			'ajaxurl' => admin_url('admin-ajax.php')
+			'ajaxurl' => admin_url('admin-ajax.php'),
+			'isConsoleResponseNeeded' => true
 		)
 	);
 }
@@ -83,7 +84,8 @@ function my_action_callback()
 
 			$data = getEndercoData($addressCheckRequest);
 			break;
-	}
+	} 
+	//$data = json_decode( '[{"postcode":"50127","city":"Bergheim","street":"\'<dds>\'\"fdsd"}]' );
 
 	echo json_encode($data);
 
@@ -134,3 +136,12 @@ function getEndercoData($expansionRequest)
 	return $data;
 }
 
+add_action('admin_menu', 'address_autocomlpete');
+
+function address_autocomlpete() {
+	add_menu_page('Autocomplete Plugin', 'Address autocomlpete', 'manage_options', 'address_autocomlpete', 'autocomplete_page', 'dashicons-carrot', 10);
+}
+
+function autocomplete_page() {
+	require_once __DIR__.'/config.php';
+}
