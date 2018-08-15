@@ -14,7 +14,6 @@ jQuery(function() {
 		}
 		return false;
 	}
-	
 
 	function autoCompleteConfig(sender) {
 		
@@ -35,15 +34,15 @@ jQuery(function() {
 				};
 				if(needRequest(data)) {
 					xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
+						log("Response is : " + response);
 						var arrayOfObjectProperty = [];
 						var jsonObj = jQuery.parseJSON(response);
 						jQuery.each(jsonObj, function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
 						suggests(arrayOfObjectProperty);
-						log("Response is : " + response);
 					});
-					log("Query has been sent. " + comileUrl(data) );
+					log("Query has been sent. " + compileUrl(data) );
 				}
 				suggests([]);
 			},
@@ -104,6 +103,7 @@ jQuery(function() {
 		};
 		
 		jQuery.get(myPlugin.ajaxurl, data, function(response) {
+			log("Response is : " + response);
 			var isNeededToShow = true;
 			var city = jQuery('#billing_city').val();
 			var postcode = jQuery('#billing_postcode').val();
@@ -132,9 +132,8 @@ jQuery(function() {
 				'data-address': address
 			});
 			jQuery('#enderecoAddressCheckModal').modal('show');
-			log("Response is : " + response);
 		});
-		log( "Query has been sent. " + comileUrl(data) );
+		log( "Query has been sent. " + compileUrl(data) );
 		event.stopImmediatePropagation();
 		return false;
 	});
@@ -172,7 +171,7 @@ jQuery(function() {
 		}
 	}
 	
-	function comileUrl (data) {
+	function compileUrl (data) {
 		return myPlugin.ajaxurl + "/" + jQuery.param( data );
 	}
 });
