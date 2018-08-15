@@ -5,14 +5,14 @@
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
-				<h4 class="modal-title">Ist Ihre Rechnungsadresse korrekt?</h4>
 			</div>
 			<div class="modal-body">
 				<div class="panel-body">
+					<h4 class="modal-title"></h4>
 					<span class="description-text">Ihre Eingabe</span>
-					<div id="enderecoCurrentInput" class="form-group"></div>
+					<div class="enderecoCurrentInput" class="form-group"></div>
 					<span class="description-text">Unsere Vorschläge</span>
-					<div id="enderecoCorrectedSuggestions" class="form-group"></div>
+					<div class="enderecoCorrectedSuggestions" class="form-group"></div>
 				</div>
 			</div>
 			<div class="modal-footer">
