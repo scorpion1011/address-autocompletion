@@ -156,7 +156,7 @@ function autocomplete_page() {
 add_filter( 'woocommerce_settings_tabs_array', 'add_settings_tab', 50 );
 
 function add_settings_tab( $settings_tabs ) {
-	$settings_tabs['settings_tab_demo'] = __( 'Settings Demo Tab', 'woocommerce-settings-tab-demo' );
+	$settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'autocomplete-config' );
 	return $settings_tabs;
 }
 
@@ -166,27 +166,45 @@ function settings_tab() {
 }
 function get_setting() {
     $settings = array(
-        'section_title' => array(
-            'name'     => __( 'Section Title', 'woocommerce-settings-tab-demo' ),
+        'title' => array(
+            'name'     => __( '', 'autocomplete-config' ),
             'type'     => 'title',
             'desc'     => '',
-            'id'       => 'wc_settings_tab_demo_section_title'
+            'id'       => 'section_title'
         ),
-        'title' => array(
-            'name' => __( 'Title', 'woocommerce-settings-tab-demo' ),
+        'mandator' => array(
+            'name' => __( 'Mandator', 'autocomplete-config' ),
             'type' => 'text',
-            'desc' => __( 'This is some helper text', 'woocommerce-settings-tab-demo' ),
-            'id'   => 'wc_settings_tab_demo_title'
+            'desc' => '',
+            'id'   => 'mandator'
         ),
-        'description' => array(
-            'name' => __( 'Description', 'woocommerce-settings-tab-demo' ),
-            'type' => 'textarea',
-            'desc' => __( 'This is a paragraph describing the setting. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda. Lorem ipsum yadda yadda yadda.', 'woocommerce-settings-tab-demo' ),
-            'id'   => 'wc_settings_tab_demo_description'
+		'user' => array(
+            'name' => __( 'User', 'autocomplete-config' ),
+            'type' => 'text',
+            'desc' => '',
+            'id'   => 'user'
         ),
-        'section_end' => array(
+		'password' => array(
+            'name' => __( 'Password', 'autocomplete-config' ),
+            'type' => 'text',
+            'desc' => '',
+            'id'   => 'password'
+        ),
+        'timeout' => array(
+            'name' => __( 'Timeout', 'autocomplete-config' ),
+            'type' => 'text',
+            'desc' => '',
+            'id'   => 'self_timeout'
+        ),
+		'logging' => array(
+            'name' => __( 'Logging', 'autocomplete-config' ),
+            'type' => 'checkbox',
+            'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console' ),
+            'id'   => 'timeout'
+        ),
+        'end' => array(
              'type' => 'sectionend',
-             'id' => 'wc_settings_tab_demo_section_end'
+             'id' => 'section_end'
         )
     );
     return apply_filters( 'wc_settings_tab_demo_settings', $settings );
@@ -194,5 +212,6 @@ function get_setting() {
 
 add_action( 'woocommerce_update_options_settings_tab_demo', 'update_settings' );
 function update_settings() {
-    woocommerce_update_options( get_settings() );
+    woocommerce_update_options( get_setting() );
+	
 }
