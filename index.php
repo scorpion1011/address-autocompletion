@@ -84,7 +84,7 @@ function my_action_callback()
 
 			$data = getEndercoData($addressCheckRequest);
 			break;
-	} 
+	}
 	//$data = json_decode( '[{"postcode":"50127","city":"Bergheim","street":"\'<dds>\'\"fdsd"}]' );
 
 	echo json_encode($data);
@@ -101,38 +101,44 @@ function getEndercoData($expansionRequest)
 {
 	$data = [];
 
-	$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
-
-	foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
+	try
 	{
-		if($expansion instanceof OrwellInputAssistantPostCodeCityExpansionResultElement)
+		$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
+
+		foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
 		{
-			$postCode = $expansion->getPostCode();
-			$city     = $expansion->getCity();
-			if(!empty($postCode) || !empty($city))
+			if($expansion instanceof OrwellInputAssistantPostCodeCityExpansionResultElement)
 			{
-				$data[] = [
-					'postcode' => $postCode,
-					'city'     => $city,
-				];
+				$postCode = $expansion->getPostCode();
+				$city     = $expansion->getCity();
+				if(!empty($postCode) || !empty($city))
+				{
+					$data[] = [
+						'postcode' => $postCode,
+						'city'     => $city,
+					];
+				}
 			}
-		}
-		else //OrwellInputAssistantStreetExpansionResultElement || EnderecoAddressCheckRequest
-		{
-			$postCode = $expansion->getPostCode();
-			$city     = $expansion->getCity();
-			$street = $expansion->getStreet();
-			if(!empty($postCode) || !empty($city) || !empty($street))
+			else //OrwellInputAssistantStreetExpansionResultElement || EnderecoAddressCheckRequest
 			{
-				$data[] = [
-					'postcode' => $postCode,
-					'city'     => $city,
-					'street'   => $street
-				];
+				$postCode = $expansion->getPostCode();
+				$city     = $expansion->getCity();
+				$street = $expansion->getStreet();
+				if(!empty($postCode) || !empty($city) || !empty($street))
+				{
+					$data[] = [
+						'postcode' => $postCode,
+						'city'     => $city,
+						'street'   => $street
+					];
+				}
 			}
 		}
 	}
-
+	catch(Exception $exception)
+	{
+		// ignore it
+	}
 	return $data;
 }
 
@@ -148,7 +154,7 @@ function autocomplete_page() {
 
 
 add_filter( 'woocommerce_settings_tabs_array', 'add_settings_tab', 50 );
-	
+
 function add_settings_tab( $settings_tabs ) {
 	$settings_tabs['settings_tab_demo'] = __( 'Settings Demo Tab', 'woocommerce-settings-tab-demo' );
 	return $settings_tabs;
