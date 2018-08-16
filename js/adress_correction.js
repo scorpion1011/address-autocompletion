@@ -101,6 +101,7 @@ var AddressCorrection = {
 
 		return {
 			minChars: 0,
+			delay: myPlugin.delay,
 			source: function(input, suggests) {
 				try {
 					addressCorrection.xhr.abort();
@@ -249,8 +250,6 @@ var AddressCorrection = {
 	}
 
 };
-
-// 1) надо убедиться, надо ли эскейпить атрибуты 2)дублирование строк в сабмите
 
 var ConfirmationPopup = {
 

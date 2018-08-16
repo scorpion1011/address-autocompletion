@@ -15,10 +15,12 @@ function link_script()
 	wp_enqueue_style( 'bootstrap.min.css', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
 	wp_enqueue_script( 'bootstrap.min.js', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
+	$delay = get_option('self_timeout');
 	wp_localize_script( 'custom-script', 'myPlugin',
 		array(
 			'ajaxurl' => admin_url('admin-ajax.php'),
-			'isConsoleResponseNeeded' => true
+			'isConsoleResponseNeeded' => get_option('logging') == 'yes' ? true : false,
+			'delay' => $delay == '' ? 150 : $delay
 		)
 	);
 }
@@ -103,7 +105,7 @@ function getEndercoData($expansionRequest)
 
 	try
 	{
-		$client = EnderecoClient::getInstance('mobilemojo', 'developer01', 'zG-BE$_9');
+		$client = EnderecoClient::getInstance( get_option('mandator'), get_option('user'), get_option('password') );
 
 		foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
 		{
@@ -200,7 +202,7 @@ function get_setting() {
             'name' => __( 'Logging', 'autocomplete-config' ),
             'type' => 'checkbox',
             'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console' ),
-            'id'   => 'timeout'
+            'id'   => 'logging'
         ),
         'end' => array(
              'type' => 'sectionend',
@@ -215,3 +217,69 @@ function update_settings() {
     woocommerce_update_options( get_setting() );
 	
 }
+
+/*add_filter("woocommerce_checkout_fields", "custom_order_fields");
+
+function custom_order_fields($fields) {
+    
+    $order = array(
+        "billing_first_name", 
+        "billing_last_name", 
+        "billing_company", 
+        "billing_country", 
+		"billing_city",
+        "billing_postcode",
+        "billing_address_1", 
+        "billing_address_2", 
+        "billing_email", 
+        "billing_phone"
+    );
+    foreach($order as $field)
+    {
+        $ordered_fields[$field] = $fields["billing"][$field];
+		//echo get_option('mandator');
+    }
+
+    $fields["billing"] = $ordered_fields;
+	
+    $fields['billing']['billing_first_name']['priority'] = 10;
+    $fields['billing']['billing_last_name']['priority'] = 20;
+    $fields['billing']['billing_company']['priority'] = 30;
+    $fields['billing']['billing_country']['priority'] = 40;
+    $fields['billing']['billing_city']['priority'] = 50;
+    $fields['billing']['billing_postcode']['priority'] = 60;
+    $fields['billing']['billing_address_1']['priority'] = 70;
+    $fields['billing']['billing_address_2']['priority'] = 80;
+    $fields['billing']['billing_phone']['priority'] = 90;
+    $fields['billing']['billing_email']['priority'] = 100;
+
+    return $fields;
+
+}
+
+function vnmTheme_addressFieldsOverride() {
+    if (is_wc_endpoint_url('edit-address') || is_checkout()) {
+        ?>
+
+        <script>
+            jQuery(document).ready(function(jQuery) {
+
+                jQuery(document.body).on('country_to_state_changing', function(event, country, wrapper) {
+
+                    var $postcodeField = wrapper.find('#billing_postcode_field, #shipping_postcode_field');
+                    var $housenoField = wrapper.find('#billing_house_number_field, #shipping_house_number_field' );
+
+                    var fieldTimeout = setTimeout(function() {
+                        $postcodeField.insertBefore($housenoField);
+                    }, 50);
+                });
+
+            });
+        </script>
+
+        <?php
+    }
+}
+
+add_action('wp_footer', 'vnmTheme_addressFieldsOverride', 999);
+*/
