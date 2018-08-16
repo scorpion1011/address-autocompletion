@@ -37,8 +37,7 @@ var AddressCorrection = {
 	xhr:                    null,
 	groupPrefix:            null,
 	confirmationHeader:     null,
-	addressConfirmed:       null,
-	postCode_CityConfirmed: null,
+	dataConfirmed:          null,
 
 	getAddress: function() {
 		var addressCorrection = this;
@@ -63,16 +62,14 @@ var AddressCorrection = {
 
 		addressCorrection.groupPrefix            = groupPrefix;
 		addressCorrection.confirmationHeader     = confirmationHeader;
-		addressCorrection.addressConfirmed       = false;
-		addressCorrection.postCode_CityConfirmed = false;
+		addressCorrection.dataConfirmed       = 00; // bit condition variable, 1 = true, 0 = false, postcode+city = (10), address = (01)
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function() {
-			addressCorrection.postCode_CityConfirmed = false;
-			addressCorrection.addressConfirmed       = false;
+			addressCorrection.dataConfirmed = 00;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function() {
-			addressCorrection.addressConfirmed = false;
+			addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 10;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city')     .autoComplete(addressCorrection.autoCompleteConfig('city'));
@@ -142,12 +139,12 @@ var AddressCorrection = {
 			onSelect: function(e, term, item){
 				if('address' == sender) {
 					jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
-					addressCorrection.addressConfirmed = true;
+					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 01;
 				}
 				else {
 					jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
 					jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
-					addressCorrection.postCode_CityConfirmed = true;
+					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 10;
 				}
 			}
 		};
@@ -175,7 +172,7 @@ var AddressCorrection = {
 		if(!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(":visible")) {
 			return false;
 		}
-		return addressCorrection.isGermany() && (!addressCorrection.addressConfirmed || !addressCorrection.postCode_CityConfirmed);
+		return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 11);
 	},
 
 	requestForSuggestions: function() {
@@ -191,7 +188,15 @@ var AddressCorrection = {
 
 		addressCorrection.suggestions = [];
 		xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
+			var jsonObj = jQuery.parseJSON(response);
+			
 			addressCorrection.log('Response is : ' + response);
+			
+			if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address ) {
+				addressConfirmed = postCode_CityConfirmed = true;
+				jQuery('form.checkout.woocommerce-checkout').submit();
+				return;
+			}
 			addressCorrection.suggestions = jQuery.parseJSON(response);
 		});
 		addressCorrection.log( 'Query has been sent. ' + addressCorrection.compileUrl(data) );
@@ -202,7 +207,7 @@ var AddressCorrection = {
 	disable: function() {
 		var addressCorrection = this;
 
-		addressCorrection.addressConfirmed = addressCorrection.postCode_CityConfirmed = true;
+		addressCorrection.dataConfirmed = 11;
 	},
 
 	getConfirmationPopupHtml: function(jqTemplate) {
