@@ -62,14 +62,14 @@ var AddressCorrection = {
 
 		addressCorrection.groupPrefix            = groupPrefix;
 		addressCorrection.confirmationHeader     = confirmationHeader;
-		addressCorrection.dataConfirmed       = 00; // bit condition variable, 1 = true, 0 = false, postcode+city = (10), address = (01)
+		addressCorrection.dataConfirmed       = 0;
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function() {
-			addressCorrection.dataConfirmed = 00;
+			addressCorrection.dataConfirmed = 0;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function() {
-			addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 10;
+			addressCorrection.dataConfirmed = 2;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city')     .autoComplete(addressCorrection.autoCompleteConfig('city'));
@@ -155,12 +155,12 @@ var AddressCorrection = {
 			onSelect: function(e, term, item){
 				if('address' == sender) {
 					jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
-					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 01;
+					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed | 1;
 				}
 				else {
 					jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
 					jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
-					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 10;
+					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed | 2;
 				}
 			}
 		};
@@ -188,7 +188,7 @@ var AddressCorrection = {
 		if(!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(":visible")) {
 			return false;
 		}
-		return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 11);
+		return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 3);
 	},
 
 	requestForSuggestions: function() {
@@ -223,7 +223,7 @@ var AddressCorrection = {
 	disable: function() {
 		var addressCorrection = this;
 
-		addressCorrection.dataConfirmed = 11;
+		addressCorrection.dataConfirmed = 3;
 	},
 
 	getConfirmationPopupHtml: function(jqTemplate) {
