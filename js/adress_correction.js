@@ -62,14 +62,14 @@ var AddressCorrection = {
 
 		addressCorrection.groupPrefix            = groupPrefix;
 		addressCorrection.confirmationHeader     = confirmationHeader;
-		addressCorrection.dataConfirmed       = 0;
+		addressCorrection.dataConfirmed          = 0;
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function() {
 			addressCorrection.dataConfirmed = 0;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function() {
-			addressCorrection.dataConfirmed = 2;
+			addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 2;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city')     .autoComplete(addressCorrection.autoCompleteConfig('city'));
@@ -155,12 +155,12 @@ var AddressCorrection = {
 			onSelect: function(e, term, item){
 				if('address' == sender) {
 					jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
-					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed | 1;
+					addressCorrection.dataConfirmed = 3;
 				}
 				else {
 					jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
 					jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
-					addressCorrection.dataConfirmed = addressCorrection.dataConfirmed | 2;
+					addressCorrection.dataConfirmed = 2;
 				}
 			}
 		};
@@ -259,7 +259,7 @@ var AddressCorrection = {
 	processFormData: function() {
 		var addressCorrection = this;
 
-		document.getElementsByName(addressCorrection.groupPrefix + 'addressCorrection').forEach(function(node) {
+		jQuery('td[name=' + addressCorrection.groupPrefix + 'addressCorrection]').forEach(function(node) {
 			if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
 				jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(node).attr('data-city'));
 				jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(node).attr('data-postcode'));
