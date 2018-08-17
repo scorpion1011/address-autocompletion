@@ -129,12 +129,28 @@ var AddressCorrection = {
 			renderItem: function (item, search){
 				search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 				var re = new RegExp('(' + search.split(' ').join('|') + ')', 'gi');
+				var str = '';
+				var attr = {};
 				if('address' == sender) {
-					var str = item.street;
-					return '<div class="autocomplete-suggestion" data-street="' + item.street + '" data-val="' + str + '">' + str.replace(re, '<b>$1</b>') + '</div>';
+					str = item.street;
+					attr = {
+						'data-street': item.street,
+						'data-val':    str
+					};
 				}
-				var str = item.postcode + ', ' + item.city;
-				return '<div class="autocomplete-suggestion" data-city="' + item.city + '" data-postcode="' + item.postcode + '" data-val="' + str + '">' + str.replace(re, '<b>$1</b>') + '</div>';
+				else {
+					str = item.postcode + ', ' + item.city;
+					attr = {
+						'data-city':     item.city,
+						'data-postcode': item.postcode,
+						'data-val':      str
+					};
+				}
+				var jqDiv = jQuery('<div><div class="autocomplete-suggestion"></div></div>');
+				jQuery('div.autocomplete-suggestion', jqDiv)
+					.attr(attr)
+					.html(str.replace(re, '<b>$1</b>'));
+				return jqDiv.html();
 			},
 			onSelect: function(e, term, item){
 				if('address' == sender) {
@@ -189,9 +205,9 @@ var AddressCorrection = {
 		addressCorrection.suggestions = [];
 		xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
 			var jsonObj = jQuery.parseJSON(response);
-			
+
 			addressCorrection.log('Response is : ' + response);
-			
+
 			if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address ) {
 				addressConfirmed = postCode_CityConfirmed = true;
 				jQuery('form.checkout.woocommerce-checkout').submit();
@@ -220,17 +236,17 @@ var AddressCorrection = {
 		jQuery('.modal-title', jqTemplate).html(addressCorrection.confirmationHeader);
 
 		jQuery.each(addressCorrection.suggestions, function(key, value) {
-			jQuery('.enderecoCorrectedSuggestions', jqTemplate).append('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="' + (1 + key) + '">' + value.postcode + ' ' + value.city + ' ' + value.street + '</label><br />');
+			jQuery('.enderecoCorrectedSuggestions', jqTemplate).append('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="' + (1 + key) + '">' + addressCorrection.escapeString(value.postcode + ' ' + value.city + ' ' + value.street) + '</label><br />');
 			jQuery('.enderecoCorrectedSuggestions input', jqTemplate).last().attr({
 				'data-city':     value.city,
 				'data-postcode': value.postcode,
 				'data-address':  value.street
 			});
 		});
-		city = addressCorrection.getCity();
+		city     = addressCorrection.getCity();
 		postcode = addressCorrection.getZip();
-		address = addressCorrection.getAddress();
-		jQuery('.enderecoCurrentInput', jqTemplate).html('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="0" checked="checked">' + postcode + ' ' + city + ' ' + address + '</label><br />');
+		address  = addressCorrection.getAddress();
+		jQuery('.enderecoCurrentInput', jqTemplate).html('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="0" checked="checked">' + addressCorrection.escapeString(postcode + ' ' + city + ' ' + address) + '</label><br />');
 		jQuery('.enderecoCurrentInput input', jqTemplate).last().attr({
 			'data-city':     city,
 			'data-postcode': postcode,
@@ -252,6 +268,10 @@ var AddressCorrection = {
 		});
 
 		addressCorrection.disable();
+	},
+
+	escapeString: function(str) {
+		return jQuery('<div>').text(str).html();
 	}
 
 };
