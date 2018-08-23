@@ -147,140 +147,112 @@ function getEndercoData($expansionRequest)
 
 add_action('admin_menu', 'address_autocomlpete');
 
-function address_autocomlpete() {
+function address_autocomlpete()
+{
 	add_menu_page('Autocomplete Plugin', 'Address autocomlpete', 'manage_options', 'address_autocomlpete', 'autocomplete_page', 'dashicons-carrot', 10);
 }
 
-function autocomplete_page() {
+function autocomplete_page()
+{
 	require_once __DIR__.'/config.php';
 }
 
-
 add_filter( 'woocommerce_settings_tabs_array', 'add_settings_tab', 50 );
 
-function add_settings_tab( $settings_tabs ) {
+function add_settings_tab( $settings_tabs )
+{
 	$settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'autocomplete-config' );
 	return $settings_tabs;
 }
 
 add_action( 'woocommerce_settings_tabs_settings_tab_demo', 'settings_tab' );
-function settings_tab() {
-    woocommerce_admin_fields( get_setting() );
+function settings_tab()
+{
+	woocommerce_admin_fields( get_setting() );
 }
-function get_setting() {
-    $settings = array(
-        'title' => array(
-            'name'     => __( '', 'autocomplete-config' ),
-            'type'     => 'title',
-            'desc'     => '',
-            'id'       => 'section_title'
-        ),
-        'mandator' => array(
-            'name' => __( 'Mandator', 'autocomplete-config' ),
-            'type' => 'text',
-            'desc' => '',
-            'id'   => 'mandator'
-        ),
+
+function get_setting()
+{
+	$settings = array(
+		'title' => array(
+			'name'     => __( '', 'autocomplete-config' ),
+			'type'     => 'title',
+			'desc'     => '',
+			'id'       => 'section_title'
+		),
+		'mandator' => array(
+			'name' => __( 'Mandator', 'autocomplete-config' ),
+			'type' => 'text',
+			'desc' => '',
+			'id'   => 'mandator'
+		),
 		'user' => array(
-            'name' => __( 'User', 'autocomplete-config' ),
-            'type' => 'text',
-            'desc' => '',
-            'id'   => 'user'
-        ),
+			'name' => __( 'User', 'autocomplete-config' ),
+			'type' => 'text',
+			'desc' => '',
+			'id'   => 'user'
+		),
 		'password' => array(
-            'name' => __( 'Password', 'autocomplete-config' ),
-            'type' => 'text',
-            'desc' => '',
-            'id'   => 'password'
-        ),
-        'timeout' => array(
-            'name' => __( 'Timeout', 'autocomplete-config' ),
-            'type' => 'text',
-            'desc' => '',
-            'id'   => 'self_timeout'
-        ),
+			'name' => __( 'Password', 'autocomplete-config' ),
+			'type' => 'text',
+			'desc' => '',
+			'id'   => 'password'
+		),
+		'timeout' => array(
+			'name' => __( 'Timeout', 'autocomplete-config' ),
+			'type' => 'text',
+			'desc' => '',
+			'id'   => 'self_timeout'
+		),
 		'logging' => array(
-            'name' => __( 'Logging', 'autocomplete-config' ),
-            'type' => 'checkbox',
-            'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console' ),
-            'id'   => 'logging'
-        ),
-        'end' => array(
-             'type' => 'sectionend',
-             'id' => 'section_end'
-        )
-    );
-    return apply_filters( 'wc_settings_tab_demo_settings', $settings );
+			'name' => __( 'Logging', 'autocomplete-config' ),
+			'type' => 'checkbox',
+			'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console' ),
+			'id'   => 'logging'
+		),
+		'end' => array(
+			 'type' => 'sectionend',
+			 'id' => 'section_end'
+		)
+	);
+	return apply_filters( 'wc_settings_tab_demo_settings', $settings );
 }
 
-add_action( 'woocommerce_update_options_settings_tab_demo', 'update_settings' );
-function update_settings() {
-    woocommerce_update_options( get_setting() );
+add_action( 'woocommerce_update_options_settings_tab_demo', function () {
+	woocommerce_update_options( get_setting() );
+});
 
-}
+add_filter('woocommerce_default_address_fields', function($fields) {
+	$fields_order = [
+		'company', 'first_name', 'last_name', 'country',
+		'state', 'city', 'postcode', 'address_1', 'address_2'
+	];
 
-/*add_filter("woocommerce_checkout_fields", "custom_order_fields");
+	// Set fields priority
+	$priority = 10;
 
-function custom_order_fields($fields) {
+	foreach ($fields_order as $key)
+	{
+		if (!isset($fields[$key]))
+		{
+			continue;
+		}
 
-    $order = array(
-        "billing_first_name",
-        "billing_last_name",
-        "billing_company",
-        "billing_country",
-		"billing_city",
-        "billing_postcode",
-        "billing_address_1",
-        "billing_address_2",
-        "billing_email",
-        "billing_phone"
-    );
-    foreach($order as $field)
-    {
-        $ordered_fields[$field] = $fields["billing"][$field];
-		//echo get_option('mandator');
-    }
+		$fields[$key]['priority'] = $priority;
+		$priority += 10;
+	}
 
-    $fields["billing"] = $ordered_fields;
+	// Change fields order
+	$fields_ordered = array();
 
-    $fields['billing']['billing_first_name']['priority'] = 10;
-    $fields['billing']['billing_last_name']['priority'] = 20;
-    $fields['billing']['billing_company']['priority'] = 30;
-    $fields['billing']['billing_country']['priority'] = 40;
-    $fields['billing']['billing_city']['priority'] = 50;
-    $fields['billing']['billing_postcode']['priority'] = 60;
-    $fields['billing']['billing_address_1']['priority'] = 70;
-    $fields['billing']['billing_address_2']['priority'] = 80;
-    $fields['billing']['billing_phone']['priority'] = 90;
-    $fields['billing']['billing_email']['priority'] = 100;
+	foreach ($fields_order as $key)
+	{
+		if (isset($fields[$key]))
+		{
+			$fields_ordered[$key] = $fields[$key];
+		}
+	}
 
-    return $fields;
+	return $fields_ordered;
+});
 
-}
-
-function vnmTheme_addressFieldsOverride() {
-    if (is_wc_endpoint_url('edit-address') || is_checkout()) {
-        ?>
-
-        <script>
-            jQuery(document).ready(function(jQuery) {
-
-                jQuery(document.body).on('country_to_state_changing', function(event, country, wrapper) {
-
-                    var $postcodeField = wrapper.find('#billing_postcode_field, #shipping_postcode_field');
-                    var $housenoField = wrapper.find('#billing_house_number_field, #shipping_house_number_field' );
-
-                    var fieldTimeout = setTimeout(function() {
-                        $postcodeField.insertBefore($housenoField);
-                    }, 50);
-                });
-
-            });
-        </script>
-
-        <?php
-    }
-}
-
-add_action('wp_footer', 'vnmTheme_addressFieldsOverride', 999);
-*/
