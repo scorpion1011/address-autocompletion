@@ -42,9 +42,9 @@ function my_action_callback()
 
 	$data = [];
 
-	$sender  = empty( $_GET['sender'] ) ? '' : esc_attr( $_GET['sender'] );
-	$zip     = empty( $_GET['zip'] ) ? '' : esc_attr( $_GET['zip'] );
-	$city    = empty( $_GET['city'] ) ? '' : esc_attr( $_GET['city'] );
+	$sender  = empty( $_GET['sender']  ) ? '' : esc_attr( $_GET['sender']  );
+	$zip     = empty( $_GET['zip']     ) ? '' : esc_attr( $_GET['zip']     );
+	$city    = empty( $_GET['city']    ) ? '' : esc_attr( $_GET['city']    );
 	$address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
 
 	switch($sender)
@@ -65,6 +65,7 @@ function my_action_callback()
 				$postCodeExpansionRequest->setPostcode($zip);
 
 				$data = getEndercoData($postCodeExpansionRequest);
+// 				$data = json_decode('[{"postcode":"30159","city":"Ha\"n\'n&o<v>erA"},{"postcode":"30161","city":"Hanno</div>verS"}]');
 			}
 			break;
 		case 'address':
@@ -215,23 +216,23 @@ function get_setting() {
 add_action( 'woocommerce_update_options_settings_tab_demo', 'update_settings' );
 function update_settings() {
     woocommerce_update_options( get_setting() );
-	
+
 }
 
 /*add_filter("woocommerce_checkout_fields", "custom_order_fields");
 
 function custom_order_fields($fields) {
-    
+
     $order = array(
-        "billing_first_name", 
-        "billing_last_name", 
-        "billing_company", 
-        "billing_country", 
+        "billing_first_name",
+        "billing_last_name",
+        "billing_company",
+        "billing_country",
 		"billing_city",
         "billing_postcode",
-        "billing_address_1", 
-        "billing_address_2", 
-        "billing_email", 
+        "billing_address_1",
+        "billing_address_2",
+        "billing_email",
         "billing_phone"
     );
     foreach($order as $field)
@@ -241,7 +242,7 @@ function custom_order_fields($fields) {
     }
 
     $fields["billing"] = $ordered_fields;
-	
+
     $fields['billing']['billing_first_name']['priority'] = 10;
     $fields['billing']['billing_last_name']['priority'] = 20;
     $fields['billing']['billing_company']['priority'] = 30;

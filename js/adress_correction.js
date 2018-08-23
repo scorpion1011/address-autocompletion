@@ -1,12 +1,19 @@
 jQuery(function() {
 
+	var blockOverlayConfig = {
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6
+			}
+		};
 	var mainForm = Object.create(jQuery('form.checkout.woocommerce-checkout').length ? MainFormCheckout : MainFormProfile);
 
 	var billingCorrection = Object.create(AddressCorrection);
-	billingCorrection.init('billing', 'Ist Ihre billing adresse korrekt?');
+	billingCorrection.init('billing', 'Ist Ihre billing adresse korrekt?', blockOverlayConfig);
 
 	var shippingCorrection = Object.create(AddressCorrection);
-	shippingCorrection.init('shipping', 'Ist Ihre shipping adresse korrekt?');
+	shippingCorrection.init('shipping', 'Ist Ihre shipping adresse korrekt?', blockOverlayConfig);
 
 	var confirmationPopup = Object.create(ConfirmationPopup);
 	confirmationPopup.init(function() {
@@ -17,12 +24,15 @@ jQuery(function() {
 	confirmationPopup.addCorrection(shippingCorrection);
 
 	mainForm.onSubmit(function(event) {
+		jQuery.blockUI(blockOverlayConfig);
+
 		if (!confirmationPopup.needConfirmation()) {
 			// allow the submit AJAX call
+			jQuery.unblockUI();
 			return true;
 		}
 
-		confirmationPopup.confirm(function() {
+		confirmationPopup.showConfirmPopup(function() {
 			mainForm.submit();
 		});
 
@@ -38,38 +48,58 @@ var AddressCorrection = {
 	groupPrefix:            null,
 	confirmationHeader:     null,
 	dataConfirmed:          null,
+	blockOverlayConfig:     null,
 
+	getAddressInput: function() {
+		var addressCorrection = this;
+
+		return jQuery('#' + addressCorrection.groupPrefix + '_address_1');
+	},
+
+	getCityInput: function() {
+		var addressCorrection = this;
+
+		return jQuery('#' + addressCorrection.groupPrefix + '_city');
+	},
+
+	getZipInput: function() {
+		var addressCorrection = this;
+
+		return jQuery('#' + addressCorrection.groupPrefix + '_postcode');
+	},
+	
 	getAddress: function() {
 		var addressCorrection = this;
-
-		return jQuery('#' + addressCorrection.groupPrefix + '_address_1').val();
+		
+		return addressCorrection.getAddressInput().val();
 	},
-
+	
 	getCity: function() {
 		var addressCorrection = this;
-
-		return jQuery('#' + addressCorrection.groupPrefix + '_city').val();
+		
+		return addressCorrection.getCityInput().val();
 	},
-
+	
 	getZip: function() {
 		var addressCorrection = this;
-
-		return jQuery('#' + addressCorrection.groupPrefix + '_postcode').val();
+		
+		return addressCorrection.getZipInput().val();
 	},
 
-	init: function (groupPrefix, confirmationHeader) {
+	init: function (groupPrefix, confirmationHeader, blockOverlayConfig) {
 		var addressCorrection = this;
 
 		addressCorrection.groupPrefix            = groupPrefix;
 		addressCorrection.confirmationHeader     = confirmationHeader;
 		addressCorrection.dataConfirmed          = 0;
+		addressCorrection.blockOverlayConfig     = blockOverlayConfig;
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function() {
 			addressCorrection.dataConfirmed = 0;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function() {
-			addressCorrection.dataConfirmed = addressCorrection.dataConfirmed & 2;
+			addressCorrection.dataConfirmed = 2;
 		});
 
 		jQuery('#' + addressCorrection.groupPrefix + '_city')     .autoComplete(addressCorrection.autoCompleteConfig('city'));
@@ -93,6 +123,18 @@ var AddressCorrection = {
 		return false;
 	},
 
+	getTargetInput: function(sender) {
+		var addressCorrection = this;
+
+		if('city' == sender) {
+			return addressCorrection.getCityInput();
+		}
+		else if ('zip' == sender) {
+			return addressCorrection.getZipInput();
+		}
+		return addressCorrection.getAddressInput();
+	},
+
 	autoCompleteConfig: function (sender) {
 		var addressCorrection = this;
 
@@ -113,16 +155,24 @@ var AddressCorrection = {
 						sender:  sender
 				};
 				if(addressCorrection.needRequest(data)) {
+					var targetInputParent = addressCorrection.getTargetInput(sender).parent();
+
+					jQuery(targetInputParent).block(addressCorrection.blockOverlayConfig);
 					addressCorrection.xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
 						addressCorrection.log('Response is : ' + response);
 						var arrayOfObjectProperty = [];
-						var jsonObj = jQuery.parseJSON(response);
-						jQuery.each(jsonObj, function(key, value) {
+						jQuery.each(jQuery.parseJSON(response), function(key, value) {
 							arrayOfObjectProperty.push(value);
 						});
 						suggests(arrayOfObjectProperty);
+					})
+					.fail(function() {
+						addressCorrection.log('Request has been cancelled.');
+					})
+					.always(function() {
+						jQuery(targetInputParent).unblock();
 					});
-					addressCorrection.log('Query has been sent. ' + addressCorrection.compileUrl(data) );
+					addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data) );
 				}
 				suggests([]);
 			},
@@ -215,7 +265,7 @@ var AddressCorrection = {
 			}
 			addressCorrection.suggestions = jQuery.parseJSON(response);
 		});
-		addressCorrection.log( 'Query has been sent. ' + addressCorrection.compileUrl(data) );
+		addressCorrection.log( 'Request has been sent. ' + addressCorrection.compileUrl(data) );
 
 		return xhr;
 	},
@@ -314,7 +364,7 @@ var ConfirmationPopup = {
 		return false;
 	},
 
-	confirm: function (formSubmitCallback) {
+	showConfirmPopup: function (formSubmitCallback) {
 		var confirmationPopup = this;
 
 		var requests = [];
@@ -325,6 +375,8 @@ var ConfirmationPopup = {
 		}
 
 		jQuery.when.apply(jQuery, requests).done(function() {
+			jQuery.unblockUI();
+
 			var html = '';
 
 			for(var i in confirmationPopup.corrections) {
