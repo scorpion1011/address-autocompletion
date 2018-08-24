@@ -205,7 +205,7 @@ var AddressCorrection = {
 			onSelect: function(e, term, item){
 				if('address' == sender) {
 					jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
-					addressCorrection.dataConfirmed = 3;
+					addressCorrection.disable();
 				}
 				else {
 					jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
@@ -259,8 +259,7 @@ var AddressCorrection = {
 			addressCorrection.log('Response is : ' + response);
 
 			if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address ) {
-				addressConfirmed = postCode_CityConfirmed = true;
-				jQuery('form.checkout.woocommerce-checkout').submit();
+				addressCorrection.disable();
 				return;
 			}
 			addressCorrection.suggestions = jQuery.parseJSON(response);
