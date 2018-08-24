@@ -309,7 +309,7 @@ var AddressCorrection = {
 	processFormData: function() {
 		var addressCorrection = this;
 
-		jQuery('td[name=' + addressCorrection.groupPrefix + 'addressCorrection]').forEach(function(node) {
+		jQuery.each(jQuery('input[name=' + addressCorrection.groupPrefix + 'addressCorrection]'), function(index, node) {
 			if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
 				jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(node).attr('data-city'));
 				jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(node).attr('data-postcode'));
