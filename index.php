@@ -8,7 +8,7 @@ add_action( 'wp_enqueue_scripts', 'link_script' );
 function link_script()
 {
 	wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress_correction.js', array('jquery') );
-
+	
 	wp_enqueue_style( 'autocomplete.css', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.css' );
 	wp_enqueue_script( 'autocomplete', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.min.js' );
 
@@ -23,6 +23,11 @@ function link_script()
 			'delay' => $delay == '' ? 150 : $delay
 		)
 	);
+}
+
+add_action('plugins_loaded', 'load_localization');
+function load_localization() {
+	load_plugin_textdomain( 'adress_autocompletion', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 }
 
 add_action('wp_ajax_action', 'my_action_callback');
@@ -143,18 +148,6 @@ function getEndercoData($expansionRequest)
 		// ignore it
 	}
 	return $data;
-}
-
-add_action('admin_menu', 'address_autocomlpete');
-
-function address_autocomlpete()
-{
-	add_menu_page('Autocomplete Plugin', 'Address autocomlpete', 'manage_options', 'address_autocomlpete', 'autocomplete_page', 'dashicons-carrot', 10);
-}
-
-function autocomplete_page()
-{
-	require_once __DIR__.'/config.php';
 }
 
 add_filter( 'woocommerce_settings_tabs_array', 'add_settings_tab', 50 );

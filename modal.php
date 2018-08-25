@@ -9,7 +9,7 @@
 			<div class="modal-body">
 				<div class="panel-body">
 					<h4 class="modal-title"></h4>
-					<span class="description-text">Ihre Eingabe</span>
+					<span class="description-text"><?php _e( 'hi', 'adress_autocompletion'  ); ?></span>
 					<div class="enderecoCurrentInput" class="form-group"></div>
 					<span class="description-text">Unsere Vorschläge</span>
 					<div class="enderecoCorrectedSuggestions" class="form-group"></div>
