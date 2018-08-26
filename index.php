@@ -20,7 +20,9 @@ function link_script()
 		array(
 			'ajaxurl' => admin_url('admin-ajax.php'),
 			'isConsoleResponseNeeded' => get_option('logging') == 'yes' ? true : false,
-			'delay' => $delay == '' ? 150 : $delay
+			'delay' => $delay == '' ? 150 : $delay,
+			'billing' => __( 'Is the billing address correct?', 'adress_autocompletion'  ),
+			'shipping' => __( 'Is the shipping address correct?', 'adress_autocompletion'  )
 		)
 	);
 }

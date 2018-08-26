@@ -10,10 +10,10 @@ jQuery(function() {
 	var mainForm = Object.create(jQuery('form.checkout.woocommerce-checkout').length ? MainFormCheckout : MainFormProfile);
 
 	var billingCorrection = Object.create(AddressCorrection);
-	billingCorrection.init('billing', 'Is the billing address correct?', blockOverlayConfig); // <?php _e( 'Your choice', 'Is the billing address correct?'  ); ?> TODO
+	billingCorrection.init('billing', myPlugin.billing, blockOverlayConfig);
 
 	var shippingCorrection = Object.create(AddressCorrection);
-	shippingCorrection.init('shipping', 'Is the shipping address correct?', blockOverlayConfig); // <?php _e( 'Your choice', 'Is the shipping address correct?'  ); ?> TODO
+	shippingCorrection.init('shipping', myPlugin.shipping, blockOverlayConfig);
 
 	var confirmationPopup = Object.create(ConfirmationPopup);
 	confirmationPopup.init(function() {
