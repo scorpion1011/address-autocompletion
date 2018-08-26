@@ -1,5 +1,4 @@
 jQuery(function() {
-
 	var blockOverlayConfig = {
 			message: null,
 			overlayCSS: {
