@@ -1,425 +1,415 @@
-jQuery(function() {
-	var blockOverlayConfig = {
-			message: null,
-			overlayCSS: {
-				background: '#fff',
-				opacity: 0.6
-			}
-		};
-	var mainForm = Object.create(jQuery('form.checkout.woocommerce-checkout').length ? MainFormCheckout : MainFormProfile);
+jQuery(function () {
+    var blockOverlayConfig = {
+        message: null,
+        overlayCSS: {
+            background: '#fff',
+            opacity: 0.6
+        }
+    };
+    var mainForm = Object.create(jQuery('form.checkout.woocommerce-checkout').length ? MainFormCheckout : MainFormProfile);
+    var billingCorrection = Object.create(AddressCorrection);
+    var shippingCorrection = Object.create(AddressCorrection);
+    var confirmationPopup = Object.create(ConfirmationPopup);
 
-	var billingCorrection = Object.create(AddressCorrection);
-	billingCorrection.init('billing', myPlugin.billing, blockOverlayConfig);
+    billingCorrection.init('billing', myPlugin.billing, blockOverlayConfig);
+    shippingCorrection.init('shipping', myPlugin.shipping, blockOverlayConfig);
 
-	var shippingCorrection = Object.create(AddressCorrection);
-	shippingCorrection.init('shipping', myPlugin.shipping, blockOverlayConfig);
+    confirmationPopup.init(function () {
+        mainForm.submit();
+    });
 
-	var confirmationPopup = Object.create(ConfirmationPopup);
-	confirmationPopup.init(function() {
-		mainForm.submit();
-	});
+    confirmationPopup.addCorrection(billingCorrection);
+    confirmationPopup.addCorrection(shippingCorrection);
 
-	confirmationPopup.addCorrection(billingCorrection);
-	confirmationPopup.addCorrection(shippingCorrection);
+    mainForm.onSubmit(function (event) {
+        jQuery.blockUI(blockOverlayConfig);
 
-	mainForm.onSubmit(function(event) {
-		jQuery.blockUI(blockOverlayConfig);
+        if (!confirmationPopup.needConfirmation()) {
+            // allow the submit AJAX call
+            jQuery.unblockUI();
+            return true;
+        }
 
-		if (!confirmationPopup.needConfirmation()) {
-			// allow the submit AJAX call
-			jQuery.unblockUI();
-			return true;
-		}
+        confirmationPopup.showConfirmPopup(function () {
+            mainForm.submit();
+        });
 
-		confirmationPopup.showConfirmPopup(function() {
-			mainForm.submit();
-		});
-
-		event.stopImmediatePropagation();
-		return false;
-	});
-
+        event.stopImmediatePropagation();
+        return false;
+    });
 });
 
 var AddressCorrection = {
+    xhr: null,
+    groupPrefix: null,
+    confirmationHeader: null,
+    dataConfirmed: null,
+    blockOverlayConfig: null,
 
-	xhr:                    null,
-	groupPrefix:            null,
-	confirmationHeader:     null,
-	dataConfirmed:          null,
-	blockOverlayConfig:     null,
+    getAddressInput: function () {
+        var addressCorrection = this;
+        return jQuery('#' + addressCorrection.groupPrefix + '_address_1');
+    },
 
-	getAddressInput: function() {
-		var addressCorrection = this;
+    getCityInput: function () {
+        var addressCorrection = this;
+        return jQuery('#' + addressCorrection.groupPrefix + '_city');
+    },
 
-		return jQuery('#' + addressCorrection.groupPrefix + '_address_1');
-	},
+    getZipInput: function () {
+        var addressCorrection = this;
+        return jQuery('#' + addressCorrection.groupPrefix + '_postcode');
+    },
 
-	getCityInput: function() {
-		var addressCorrection = this;
+    getAddress: function () {
+        var addressCorrection = this;
+        return addressCorrection.getAddressInput().val();
+    },
 
-		return jQuery('#' + addressCorrection.groupPrefix + '_city');
-	},
+    getCity: function () {
+        var addressCorrection = this;
+        return addressCorrection.getCityInput().val();
+    },
 
-	getZipInput: function() {
-		var addressCorrection = this;
+    getZip: function () {
+        var addressCorrection = this;
+        return addressCorrection.getZipInput().val();
+    },
 
-		return jQuery('#' + addressCorrection.groupPrefix + '_postcode');
-	},
-	
-	getAddress: function() {
-		var addressCorrection = this;
-		
-		return addressCorrection.getAddressInput().val();
-	},
-	
-	getCity: function() {
-		var addressCorrection = this;
-		
-		return addressCorrection.getCityInput().val();
-	},
-	
-	getZip: function() {
-		var addressCorrection = this;
-		
-		return addressCorrection.getZipInput().val();
-	},
+    init: function (groupPrefix, confirmationHeader, blockOverlayConfig) {
+        var addressCorrection = this;
 
-	init: function (groupPrefix, confirmationHeader, blockOverlayConfig) {
-		var addressCorrection = this;
+        addressCorrection.groupPrefix = groupPrefix;
+        addressCorrection.confirmationHeader = confirmationHeader;
+        addressCorrection.dataConfirmed = 0;
+        addressCorrection.blockOverlayConfig = blockOverlayConfig;
 
-		addressCorrection.groupPrefix            = groupPrefix;
-		addressCorrection.confirmationHeader     = confirmationHeader;
-		addressCorrection.dataConfirmed          = 0;
-		addressCorrection.blockOverlayConfig     = blockOverlayConfig;
+        jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function () {
+            addressCorrection.dataConfirmed = 0;
+        });
 
-		jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function() {
-			addressCorrection.dataConfirmed = 0;
-		});
+        jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function () {
+            addressCorrection.dataConfirmed = 2;
+        });
 
-		jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function() {
-			addressCorrection.dataConfirmed = 2;
-		});
+        jQuery('#' + addressCorrection.groupPrefix + '_city').autoComplete(addressCorrection.autoCompleteConfig('city'));
+        jQuery('#' + addressCorrection.groupPrefix + '_postcode').autoComplete(addressCorrection.autoCompleteConfig('zip'));
+        jQuery('#' + addressCorrection.groupPrefix + '_address_1').autoComplete(addressCorrection.autoCompleteConfig('address'));
+    },
 
-		jQuery('#' + addressCorrection.groupPrefix + '_city')     .autoComplete(addressCorrection.autoCompleteConfig('city'));
-		jQuery('#' + addressCorrection.groupPrefix + '_postcode') .autoComplete(addressCorrection.autoCompleteConfig('zip'));
-		jQuery('#' + addressCorrection.groupPrefix + '_address_1').autoComplete(addressCorrection.autoCompleteConfig('address'));
+    needRequest: function (data) {
+        var addressCorrection = this;
 
-	},
+        if (addressCorrection.isGermany()) {
+            if ('city' == data.sender) {
+                return data.city.length > 0;
+            }
+            if ('zip' == data.sender) {
+                return data.zip.length > 0;
+            }
+            return data.address.length > 0;
+        }
+        return false;
+    },
 
-	needRequest: function (data) {
-		var addressCorrection = this;
+    getTargetInput: function (sender) {
+        var addressCorrection = this;
 
-		if ( addressCorrection.isGermany() ) {
-			if('city' == data.sender) {
-				return data.city.length > 0;
-			}
-			if('zip' == data.sender) {
-				return data.zip.length > 0;
-			}
-			return data.address.length > 0;
-		}
-		return false;
-	},
+        if ('city' == sender) {
+            return addressCorrection.getCityInput();
+        }
+        else if ('zip' == sender) {
+            return addressCorrection.getZipInput();
+        }
+        return addressCorrection.getAddressInput();
+    },
 
-	getTargetInput: function(sender) {
-		var addressCorrection = this;
+    autoCompleteConfig: function (sender) {
+        var addressCorrection = this;
 
-		if('city' == sender) {
-			return addressCorrection.getCityInput();
-		}
-		else if ('zip' == sender) {
-			return addressCorrection.getZipInput();
-		}
-		return addressCorrection.getAddressInput();
-	},
+        return {
+            minChars: 0,
+            delay: myPlugin.delay,
+            source: function (input, suggests) {
+                try {
+                    addressCorrection.xhr.abort();
+                }
+                catch (e) {
+                }
+                var data = {
+                    action: 'action',
+                    address: addressCorrection.getAddress(),
+                    city: addressCorrection.getCity(),
+                    zip: addressCorrection.getZip(),
+                    sender: sender
+                };
+                if (addressCorrection.needRequest(data)) {
+                    var targetInputParent = addressCorrection.getTargetInput(sender).parent();
 
-	autoCompleteConfig: function (sender) {
-		var addressCorrection = this;
+                    jQuery(targetInputParent).block(addressCorrection.blockOverlayConfig);
+                    addressCorrection.xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
+                        addressCorrection.log('Response is : ' + response);
+                        var arrayOfObjectProperty = [];
+                        jQuery.each(jQuery.parseJSON(response), function (key, value) {
+                            arrayOfObjectProperty.push(value);
+                        });
+                        suggests(arrayOfObjectProperty);
+                    })
+                    .fail(function () {
+                        addressCorrection.log('Request has been cancelled.');
+                    })
+                    .always(function () {
+                        jQuery(targetInputParent).unblock();
+                    });
+                    addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
+                }
+                suggests([]);
+            },
+            renderItem: function (item, search) {
+                search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                var re = new RegExp('(' + search.split(' ').join('|') + ')', 'gi');
+                var str = '';
+                var attr = {};
+                if ('address' == sender) {
+                    str = item.street;
+                    attr = {
+                        'data-street': item.street,
+                        'data-val': str
+                    };
+                }
+                else {
+                    str = item.postcode + ', ' + item.city;
+                    attr = {
+                        'data-city': item.city,
+                        'data-postcode': item.postcode,
+                        'data-val': str
+                    };
+                }
+                var jqDiv = jQuery('<div><div class="autocomplete-suggestion"></div></div>');
+                jQuery('div.autocomplete-suggestion', jqDiv)
+                    .attr(attr)
+                    .html(str.replace(re, '<b>$1</b>'));
+                return jqDiv.html();
+            },
+            onSelect: function (e, term, item) {
+                if ('address' == sender) {
+                    jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
+                    addressCorrection.disable();
+                }
+                else {
+                    jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
+                    jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
+                    addressCorrection.dataConfirmed = 2;
+                }
+            }
+        };
+    },
 
-		return {
-			minChars: 0,
-			delay: myPlugin.delay,
-			source: function(input, suggests) {
-				try {
-					addressCorrection.xhr.abort();
-				}
-				catch(e){
-				}
-				var data = {
-						action:  'action',
-						address: addressCorrection.getAddress(),
-						city:    addressCorrection.getCity(),
-						zip:     addressCorrection.getZip(),
-						sender:  sender
-				};
-				if(addressCorrection.needRequest(data)) {
-					var targetInputParent = addressCorrection.getTargetInput(sender).parent();
+    isGermany: function () {
+        var addressCorrection = this;
 
-					jQuery(targetInputParent).block(addressCorrection.blockOverlayConfig);
-					addressCorrection.xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
-						addressCorrection.log('Response is : ' + response);
-						var arrayOfObjectProperty = [];
-						jQuery.each(jQuery.parseJSON(response), function(key, value) {
-							arrayOfObjectProperty.push(value);
-						});
-						suggests(arrayOfObjectProperty);
-					})
-					.fail(function() {
-						addressCorrection.log('Request has been cancelled.');
-					})
-					.always(function() {
-						jQuery(targetInputParent).unblock();
-					});
-					addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data) );
-				}
-				suggests([]);
-			},
-			renderItem: function (item, search){
-				search = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-				var re = new RegExp('(' + search.split(' ').join('|') + ')', 'gi');
-				var str = '';
-				var attr = {};
-				if('address' == sender) {
-					str = item.street;
-					attr = {
-						'data-street': item.street,
-						'data-val':    str
-					};
-				}
-				else {
-					str = item.postcode + ', ' + item.city;
-					attr = {
-						'data-city':     item.city,
-						'data-postcode': item.postcode,
-						'data-val':      str
-					};
-				}
-				var jqDiv = jQuery('<div><div class="autocomplete-suggestion"></div></div>');
-				jQuery('div.autocomplete-suggestion', jqDiv)
-					.attr(attr)
-					.html(str.replace(re, '<b>$1</b>'));
-				return jqDiv.html();
-			},
-			onSelect: function(e, term, item){
-				if('address' == sender) {
-					jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
-					addressCorrection.disable();
-				}
-				else {
-					jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
-					jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
-					addressCorrection.dataConfirmed = 2;
-				}
-			}
-		};
-	},
+        return jQuery('#' + addressCorrection.groupPrefix + '_country').val().toLowerCase() == 'de';
+    },
 
-	isGermany: function () {
-		var addressCorrection = this;
+    log: function (message) {
+        if (myPlugin.isConsoleResponseNeeded) {
+            console.log(message);
+        }
+    },
 
-		return jQuery('#' + addressCorrection.groupPrefix + '_country').val().toLowerCase() == 'de';
-	},
+    compileUrl: function (data) {
+        return myPlugin.ajaxurl + '/' + jQuery.param(data);
+    },
 
-	log: function (message) {
-		if (myPlugin.isConsoleResponseNeeded) {
-			console.log(message);
-		}
-	},
+    needConfirmation: function () {
+        var addressCorrection = this;
+        //check if this kind of address presents and visible for user
+        if (!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(":visible")) {
+            return false;
+        }
+        return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 3);
+    },
 
-	compileUrl: function (data) {
-		return myPlugin.ajaxurl + '/' + jQuery.param( data );
-	},
+    requestForSuggestions: function () {
+        var addressCorrection = this;
 
-	needConfirmation: function () {
-		var addressCorrection = this;
-		//check if this kind of address presents and visible for user
-		if(!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(":visible")) {
-			return false;
-		}
-		return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 3);
-	},
+        var data = {
+            action: 'action',
+            address: addressCorrection.getAddress(),
+            city: addressCorrection.getCity(),
+            zip: addressCorrection.getZip(),
+            sender: 'submit'
+        };
 
-	requestForSuggestions: function() {
-		var addressCorrection = this;
+        addressCorrection.suggestions = [];
+        xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
+            var jsonObj = jQuery.parseJSON(response);
 
-		var data = {
-				action:  'action',
-				address: addressCorrection.getAddress(),
-				city:    addressCorrection.getCity(),
-				zip:     addressCorrection.getZip(),
-				sender:  'submit'
-		};
+            addressCorrection.log('Response is : ' + response);
 
-		addressCorrection.suggestions = [];
-		xhr = jQuery.get(myPlugin.ajaxurl, data, function(response) {
-			var jsonObj = jQuery.parseJSON(response);
+            if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address) {
+                addressCorrection.disable();
+                return;
+            }
+            addressCorrection.suggestions = jQuery.parseJSON(response);
+        });
+        addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
 
-			addressCorrection.log('Response is : ' + response);
+        return xhr;
+    },
 
-			if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address ) {
-				addressCorrection.disable();
-				return;
-			}
-			addressCorrection.suggestions = jQuery.parseJSON(response);
-		});
-		addressCorrection.log( 'Request has been sent. ' + addressCorrection.compileUrl(data) );
+    disable: function () {
+        var addressCorrection = this;
 
-		return xhr;
-	},
+        addressCorrection.dataConfirmed = 3;
+    },
 
-	disable: function() {
-		var addressCorrection = this;
+    getConfirmationPopupHtml: function (jqTemplate) {
+        var addressCorrection = this;
 
-		addressCorrection.dataConfirmed = 3;
-	},
+        if (0 == addressCorrection.suggestions.length) {
+            return '';
+        }
 
-	getConfirmationPopupHtml: function(jqTemplate) {
-		var addressCorrection = this;
+        jQuery('.modal-title', jqTemplate).html(addressCorrection.confirmationHeader);
 
-		if(0 == addressCorrection.suggestions.length) {
-			return '';
-		}
+        jQuery.each(addressCorrection.suggestions, function (key, value) {
+            jQuery('.enderecoCorrectedSuggestions', jqTemplate).append('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="' + (1 + key) + '">' + addressCorrection.escapeString(value.postcode + ' ' + value.city + ' ' + value.street) + '</label><br />');
+            jQuery('.enderecoCorrectedSuggestions input', jqTemplate).last().attr({
+                'data-city': value.city,
+                'data-postcode': value.postcode,
+                'data-address': value.street
+            });
+        });
+        city = addressCorrection.getCity();
+        postcode = addressCorrection.getZip();
+        address = addressCorrection.getAddress();
+        jQuery('.enderecoCurrentInput', jqTemplate).html('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="0" checked="checked">' + addressCorrection.escapeString(postcode + ' ' + city + ' ' + address) + '</label><br />');
+        jQuery('.enderecoCurrentInput input', jqTemplate).last().attr({
+            'data-city': city,
+            'data-postcode': postcode,
+            'data-address': address
+        });
 
-		jQuery('.modal-title', jqTemplate).html(addressCorrection.confirmationHeader);
+        return jqTemplate.html();
+    },
 
-		jQuery.each(addressCorrection.suggestions, function(key, value) {
-			jQuery('.enderecoCorrectedSuggestions', jqTemplate).append('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="' + (1 + key) + '">' + addressCorrection.escapeString(value.postcode + ' ' + value.city + ' ' + value.street) + '</label><br />');
-			jQuery('.enderecoCorrectedSuggestions input', jqTemplate).last().attr({
-				'data-city':     value.city,
-				'data-postcode': value.postcode,
-				'data-address':  value.street
-			});
-		});
-		city     = addressCorrection.getCity();
-		postcode = addressCorrection.getZip();
-		address  = addressCorrection.getAddress();
-		jQuery('.enderecoCurrentInput', jqTemplate).html('<label><input type="radio" name="' + addressCorrection.groupPrefix + 'addressCorrection" data-id="0" checked="checked">' + addressCorrection.escapeString(postcode + ' ' + city + ' ' + address) + '</label><br />');
-		jQuery('.enderecoCurrentInput input', jqTemplate).last().attr({
-			'data-city':     city,
-			'data-postcode': postcode,
-			'data-address':  address
-		});
+    processFormData: function () {
+        var addressCorrection = this;
 
-		return jqTemplate.html();
-	},
+        jQuery.each(jQuery('input[name=' + addressCorrection.groupPrefix + 'addressCorrection]'), function (index, node) {
+            if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
+                jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(node).attr('data-city'));
+                jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(node).attr('data-postcode'));
+                jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(node).attr('data-address'));
+            }
+        });
 
-	processFormData: function() {
-		var addressCorrection = this;
+        addressCorrection.disable();
+    },
 
-		jQuery.each(jQuery('input[name=' + addressCorrection.groupPrefix + 'addressCorrection]'), function(index, node) {
-			if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
-				jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(node).attr('data-city'));
-				jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(node).attr('data-postcode'));
-				jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(node).attr('data-address'));
-			}
-		});
-
-		addressCorrection.disable();
-	},
-
-	escapeString: function(str) {
-		return jQuery('<div>').text(str).html();
-	}
+    escapeString: function (str) {
+        return jQuery('<div>').text(str).html();
+    }
 
 };
 
 var ConfirmationPopup = {
 
-	corrections: [],
+    corrections: [],
 
-	jqTemplate: null,
+    jqTemplate: null,
 
-	init: function (formSubmitCallback) {
-		var confirmationPopup = this;
+    init: function (formSubmitCallback) {
+        var confirmationPopup = this;
 
-		ConfirmationPopup.jqTemplate = jQuery('#enderecoAddressCheckModal .panel-body').detach();
+        ConfirmationPopup.jqTemplate = jQuery('#enderecoAddressCheckModal .panel-body').detach();
 
-		jQuery('#enderecoAddressCheckSubmit').click(function(){
-			for(var i in confirmationPopup.corrections) {
-				confirmationPopup.corrections[i].processFormData();
-			}
-			jQuery('#enderecoAddressCheckModal').modal('hide');
-			formSubmitCallback();
-		});
+        jQuery('#enderecoAddressCheckSubmit').click(function () {
+            for (var i in confirmationPopup.corrections) {
+                confirmationPopup.corrections[i].processFormData();
+            }
+            jQuery('#enderecoAddressCheckModal').modal('hide');
+            formSubmitCallback();
+        });
 
-	},
+    },
 
-	addCorrection: function (correction) {
-		var confirmationPopup = this;
+    addCorrection: function (correction) {
+        var confirmationPopup = this;
 
-		confirmationPopup.corrections.push(correction);
-	},
+        confirmationPopup.corrections.push(correction);
+    },
 
-	needConfirmation: function () {
-		var confirmationPopup = this;
+    needConfirmation: function () {
+        var confirmationPopup = this;
 
-		for(var i in confirmationPopup.corrections) {
-			if(confirmationPopup.corrections[i].needConfirmation()) {
-				return true;
-			}
-		}
-		return false;
-	},
+        for (var i in confirmationPopup.corrections) {
+            if (confirmationPopup.corrections[i].needConfirmation()) {
+                return true;
+            }
+        }
+        return false;
+    },
 
-	showConfirmPopup: function (formSubmitCallback) {
-		var confirmationPopup = this;
+    showConfirmPopup: function (formSubmitCallback) {
+        var confirmationPopup = this;
 
-		var requests = [];
-		for(var i in confirmationPopup.corrections) {
-			if(confirmationPopup.corrections[i].needConfirmation()) {
-				requests.push(confirmationPopup.corrections[i].requestForSuggestions());
-			}
-		}
+        var requests = [];
+        for (var i in confirmationPopup.corrections) {
+            if (confirmationPopup.corrections[i].needConfirmation()) {
+                requests.push(confirmationPopup.corrections[i].requestForSuggestions());
+            }
+        }
 
-		jQuery.when.apply(jQuery, requests).done(function() {
-			jQuery.unblockUI();
+        jQuery.when.apply(jQuery, requests).done(function () {
+            jQuery.unblockUI();
 
-			var html = '';
+            var html = '';
 
-			for(var i in confirmationPopup.corrections) {
-				if(confirmationPopup.corrections[i].needConfirmation()) {
-					html += confirmationPopup.corrections[i].getConfirmationPopupHtml(confirmationPopup.jqTemplate.clone());
-				}
-			}
-			if(html) {
-				jQuery('#enderecoAddressCheckModal .modal-body').html(html);
-				jQuery('#enderecoAddressCheckModal').modal('show');
-				return;
-			}
-			for(var i in confirmationPopup.corrections) {
-				confirmationPopup.corrections[i].disable();
-			}
-			formSubmitCallback();
-		});
-	}
+            for (var i in confirmationPopup.corrections) {
+                if (confirmationPopup.corrections[i].needConfirmation()) {
+                    html += confirmationPopup.corrections[i].getConfirmationPopupHtml(confirmationPopup.jqTemplate.clone());
+                }
+            }
+            if (html) {
+                jQuery('#enderecoAddressCheckModal .modal-body').html(html);
+                jQuery('#enderecoAddressCheckModal').modal('show');
+                return;
+            }
+            for (var i in confirmationPopup.corrections) {
+                confirmationPopup.corrections[i].disable();
+            }
+            formSubmitCallback();
+        });
+    }
 
 };
 
 var MainFormCheckout = {
 
-	submit: function() {
-		jQuery('form.checkout.woocommerce-checkout').submit();
-	},
+    submit: function () {
+        jQuery('form.checkout.woocommerce-checkout').submit();
+    },
 
-	onSubmit: function(processCallback) {
-		jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function(event) {
-			return processCallback(event);
-		});
-	}
+    onSubmit: function (processCallback) {
+        jQuery('form.checkout.woocommerce-checkout').on('checkout_place_order', function (event) {
+            return processCallback(event);
+        });
+    }
 
 }
 
 var MainFormProfile = {
 
-	submit: function() {
-		jQuery('div.woocommerce-MyAccount-content form').submit();
-	},
+    submit: function () {
+        jQuery('div.woocommerce-MyAccount-content form').submit();
+    },
 
-	onSubmit: function(processCallback) {
-		jQuery('div.woocommerce-MyAccount-content button').on('click', function(event) {
-			return processCallback(event);
-		});
-	}
+    onSubmit: function (processCallback) {
+        jQuery('div.woocommerce-MyAccount-content button').on('click', function (event) {
+            return processCallback(event);
+        });
+    }
 
 }
