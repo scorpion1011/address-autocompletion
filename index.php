@@ -127,7 +127,7 @@ function getEndercoData($expansionRequest) {
     return $data;
 }
 
-add_filter( 'woocommerce_settings_tabs_array', function () {
+add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
     $settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'autocomplete-config' );
     return $settings_tabs;
 }, 50 );
