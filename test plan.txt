@@ -1,0 +1,22 @@
+1)mandator+user+password valid => server response...........................+
+2)mandator+user+password not valid => response is []........................+
+3)timeout => response timeout...............................................+       (f5)
+4)timeout not valid => response without timeout.............................+
+5)logging checked => response in console....................................+       (f5)
+6)logging unchecked => nothing in console...................................+       (f5)
+7)country - Germany => autocomplete working.................................+       (f5)
+8)country - not Germany => autocomplete not working.........................+       (f5)
+9)city autocomplete (4forms).............................................++++
+10)zip autocomplete (4forms).............................................++++
+11)city+zip correct => address autocomplete (4forms).....................++++
+12)city+zip incorrect => address autocomplete not working (4 forms)......++++
+13)city+zip+address bug input (',",/,+,=,1..0,.,<,>,],)..)..................+?
+//input address: ">'"/<div>232</div>.,[lolo]
+//your choise: 56729 Acht ">'"/<div>232</div>.,[lolo]
+//html: data-address="&quot;>'&quot;/<div>232</div>.,[lolo]">
+14)submit on correct city+zip+address (4forms) => submit.................++++
+15)submit on incorrect city+zip/address (4forms) => popup................++++
+16)submit on correct but not varified values => submit......................+
+17)choose corrected variant => textboxes changed (4forms)................++++
+18)localization (change WP lang to DE => check popup labels)................+       (f5)
+19)plugin disable if server not response....................................+
