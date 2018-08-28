@@ -9,14 +9,14 @@
             <div class="modal-body">
                 <div class="panel-body">
                     <h4 class="modal-title"></h4>
-                    <span class="description-text"><?php _e( 'Your choice', 'adress-autocompletion'  ); ?></span>
+                    <span class="description-text"><?php _e( 'Your choice', 'address-autocompletion'  ); ?></span>
                     <div class="enderecoCurrentInput" class="form-group"></div>
-                    <span class="description-text"><?php _e( 'Correction', 'adress-autocompletion'  ); ?></span>
+                    <span class="description-text"><?php _e( 'Correction', 'address-autocompletion'  ); ?></span>
                     <div class="enderecoCorrectedSuggestions" class="form-group"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="enderecoAddressCheckSubmit"><?php _e( 'Confirm address', 'adress-autocompletion'  ); ?></button>
+                <button type="button" class="btn btn-primary" id="enderecoAddressCheckSubmit"><?php _e( 'Confirm address', 'address-autocompletion'  ); ?></button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

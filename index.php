@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: Adress Autocompletion
+ * Plugin Name: Address Autocompletion
  * Description: Set up Endereco Address WebServices to the checkout page
  */
 
 add_action( 'wp_enqueue_scripts', function () {
-    wp_enqueue_script( 'custom-script', plugins_url() . '/adress_autocompletion/js/adress-correction.js', array('jquery') );
-    wp_enqueue_style( 'autocomplete.css', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.css' );
-    wp_enqueue_script( 'autocomplete', plugins_url() . '/adress_autocompletion/js/jquery.auto-complete.min.js' );
+    wp_enqueue_script( 'custom-script', plugins_url() . '/address-autocompletion/js/address-correction.js', array('jquery') );
+    wp_enqueue_style( 'autocomplete.css', plugins_url() . '/address-autocompletion/js/jquery.auto-complete.css' );
+    wp_enqueue_script( 'autocomplete', plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
     wp_enqueue_style( 'bootstrap.min.css', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
     wp_enqueue_script( 'bootstrap.min.js', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
@@ -17,24 +17,24 @@ add_action( 'wp_enqueue_scripts', function () {
             'ajaxurl' => admin_url('admin-ajax.php'),
             'isConsoleResponseNeeded' => get_option('logging') == 'yes' ? true : false,
             'delay' => $delay == '' ? 150 : $delay,
-            'billing' => __( 'Is the billing address correct?', 'adress-autocompletion'  ),
-            'shipping' => __( 'Is the shipping address correct?', 'adress-autocompletion'  )
+            'billing' => __( 'Is the billing address correct?', 'address-autocompletion'  ),
+            'shipping' => __( 'Is the shipping address correct?', 'address-autocompletion'  )
         )
     );
 });
 
 add_action('plugins_loaded', function () {
-    load_plugin_textdomain( 'adress_autocompletion', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+    load_plugin_textdomain( 'address-autocompletion', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 });
 
-add_action('wp_ajax_action', 'address-correction_getAjaxJson');
-add_action('wp_ajax_nopriv_action', 'address-correction_getAjaxJson');
+add_action('wp_ajax_action', 'address_correction_getAjaxJson');
+add_action('wp_ajax_nopriv_action', 'address_correction_getAjaxJson');
 
 add_action('wp_footer', function () {
     require_once __DIR__.'/modal.php';
 });
 
-function address-correction_getAjaxJson() {
+function address_correction_getAjaxJson() {
     require_once __DIR__.'/sdk/autoload.php';
 
     $data = [];
@@ -50,7 +50,7 @@ function address-correction_getAjaxJson() {
             {
                 $cityExpansionRequest = new EnderecoCityExpansionRequest();
                 $cityExpansionRequest->setCity($city);
-                $data = address-correction_getEndercoData($cityExpansionRequest);
+                $data = address_correction_getEndercoData($cityExpansionRequest);
             }
             break;
         case 'zip':
@@ -58,7 +58,7 @@ function address-correction_getAjaxJson() {
             {
                 $postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
                 $postCodeExpansionRequest->setPostcode($zip);
-                $data = address-correction_getEndercoData($postCodeExpansionRequest);
+                $data = address_correction_getEndercoData($postCodeExpansionRequest);
             }
             break;
         case 'address':
@@ -68,7 +68,7 @@ function address-correction_getAjaxJson() {
                 $streetExpansionRequest->setPostcode($zip);
                 $streetExpansionRequest->setCity($city);
                 $streetExpansionRequest->setStreet($address);
-                $data = address-correction_getEndercoData($streetExpansionRequest);
+                $data = address_correction_getEndercoData($streetExpansionRequest);
             }
             break;
         case 'submit':
@@ -76,14 +76,14 @@ function address-correction_getAjaxJson() {
             $addressCheckRequest->setPostcode($zip);
             $addressCheckRequest->setCity($city);
             $addressCheckRequest->setStreet($address);
-            $data = address-correction_getEndercoData($addressCheckRequest);
+            $data = address_correction_getEndercoData($addressCheckRequest);
             break;
     }
     echo json_encode($data);
     wp_die();
 }
 
-function address-correction_getEndercoData($expansionRequest) {
+function address_correction_getEndercoData($expansionRequest) {
     $data = [];
 
     try
@@ -133,10 +133,10 @@ add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
 }, 50 );
 
 add_action( 'woocommerce_settings_tabs_settings_tab_demo', function () {
-    woocommerce_admin_fields( address-correction_getContent() );
+    woocommerce_admin_fields( address_correction_getContent() );
 });
 
-function address-correction_getContent() {
+function address_correction_getContent() {
     $settings = array(
         'title' => array(
             'name'     => __( '', 'autocomplete-config' ),
@@ -183,7 +183,7 @@ function address-correction_getContent() {
 }
 
 add_action( 'woocommerce_update_options_settings_tab_demo', function () {
-    woocommerce_update_options( address-correction_getContent() );
+    woocommerce_update_options( address_correction_getContent() );
 });
 
 add_filter('woocommerce_default_address_fields', function($fields) {
