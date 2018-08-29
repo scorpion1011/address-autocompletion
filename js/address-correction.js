@@ -11,8 +11,8 @@ jQuery(function () {
     var shippingCorrection = Object.create(AddressCorrection);
     var confirmationPopup = Object.create(ConfirmationPopup);
 
-    billingCorrection.init('billing', myPlugin.billing, blockOverlayConfig);
-    shippingCorrection.init('shipping', myPlugin.shipping, blockOverlayConfig);
+    billingCorrection.init('billing', addressCorrection.billing, blockOverlayConfig);
+    shippingCorrection.init('shipping', addressCorrection.shipping, blockOverlayConfig);
 
     confirmationPopup.init(function () {
         mainForm.submit();
@@ -129,7 +129,7 @@ var AddressCorrection = {
 
         return {
             minChars: 0,
-            delay: myPlugin.delay,
+            delay: addressCorrection.delay,
             source: function (input, suggests) {
                 try {
                     addressCorrection.xhr.abort();
@@ -147,7 +147,7 @@ var AddressCorrection = {
                     var targetInputParent = addressCorrection.getTargetInput(sender).parent();
 
                     jQuery(targetInputParent).block(addressCorrection.blockOverlayConfig);
-                    addressCorrection.xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
+                    addressCorrection.xhr = jQuery.get(addressCorrection.ajaxurl, data, function (response) {
                         addressCorrection.log('Response is : ' + response);
                         var arrayOfObjectProperty = [];
                         jQuery.each(jQuery.parseJSON(response), function (key, value) {
@@ -212,13 +212,13 @@ var AddressCorrection = {
     },
 
     log: function (message) {
-        if (myPlugin.isConsoleResponseNeeded) {
+        if (addressCorrection.isConsoleResponseNeeded) {
             console.log(message);
         }
     },
 
     compileUrl: function (data) {
-        return myPlugin.ajaxurl + '/' + jQuery.param(data);
+        return addressCorrection.ajaxurl + '/' + jQuery.param(data);
     },
 
     needConfirmation: function () {
@@ -242,7 +242,7 @@ var AddressCorrection = {
         };
 
         addressCorrection.suggestions = [];
-        xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
+        xhr = jQuery.get(addressCorrection.ajaxurl, data, function (response) {
             var jsonObj = jQuery.parseJSON(response);
 
             addressCorrection.log('Response is : ' + response);
