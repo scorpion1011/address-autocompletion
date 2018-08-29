@@ -148,6 +148,10 @@ add_action( 'woocommerce_settings_tabs_settings_tab_demo', function () {
     woocommerce_admin_fields( address_correction_getContent() );
 });
 
+add_action( 'woocommerce_update_options_settings_tab_demo', function () {
+    woocommerce_update_options( address_correction_getContent() );
+});
+
 function address_correction_getContent()
 {
     $settings = array(
@@ -194,10 +198,6 @@ function address_correction_getContent()
     );
     return apply_filters( 'wc_settings_tab_demo_settings', $settings );
 }
-
-add_action( 'woocommerce_update_options_settings_tab_demo', function () {
-    woocommerce_update_options( address_correction_getContent() );
-});
 
 add_filter('woocommerce_default_address_fields', function($fields) {
     $fields_order = [
