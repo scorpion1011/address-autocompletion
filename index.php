@@ -1,8 +1,18 @@
 <?php
 /**
- * Plugin Name: Address Autocompletion
- * Description: Set up Endereco Address WebServices to the checkout page
+ * Plugin Name: WooCommerce Address Autocompletion
+ * Description: Set up Endereco Address WebServices for billling and shipping address forms. Requires WooCommerce installed.
  */
+
+if(!defined('ABSPATH'))
+{
+    exit; // Exit if accessed directly
+}
+
+add_filter('plugin_action_links_' . plugin_basename( __FILE__ ), function ( $links ) {
+    array_unshift($links, '<a href="/wp-admin/admin.php?page=wc-settings&tab=settings_tab_demo">' . __( 'Settings' ) . '</a>');
+    return $links;
+});
 
 add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_script( 'custom-script', plugins_url() . '/address-autocompletion/js/address-correction.js', array('jquery') );
@@ -34,7 +44,8 @@ add_action('wp_footer', function () {
     require_once __DIR__.'/modal.php';
 });
 
-function address_correction_getAjaxJson() {
+function address_correction_getAjaxJson()
+{
     require_once __DIR__.'/sdk/autoload.php';
 
     $data = [];
@@ -83,7 +94,8 @@ function address_correction_getAjaxJson() {
     wp_die();
 }
 
-function address_correction_getEndercoData($expansionRequest) {
+function address_correction_getEndercoData($expansionRequest)
+{
     $data = [];
 
     try
@@ -136,7 +148,8 @@ add_action( 'woocommerce_settings_tabs_settings_tab_demo', function () {
     woocommerce_admin_fields( address_correction_getContent() );
 });
 
-function address_correction_getContent() {
+function address_correction_getContent()
+{
     $settings = array(
         'title' => array(
             'name'     => __( '', 'autocomplete-config' ),
