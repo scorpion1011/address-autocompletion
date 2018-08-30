@@ -22,7 +22,7 @@ add_action( 'wp_enqueue_scripts', function () {
     wp_enqueue_script( 'bootstrap.min.js', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
     $delay = get_option('self_timeout');
-    wp_localize_script( 'custom-script', 'addressCorrection',
+    wp_localize_script( 'custom-script', 'myPlugin',
         array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'isConsoleResponseNeeded' => get_option('logging') == 'yes' ? true : false,
