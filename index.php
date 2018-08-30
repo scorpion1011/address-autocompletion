@@ -37,14 +37,14 @@ add_action('plugins_loaded', function () {
     load_plugin_textdomain( 'address-autocompletion', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
 });
 
-add_action('wp_ajax_action', 'address_correction_getAjaxJson');
-add_action('wp_ajax_nopriv_action', 'address_correction_getAjaxJson');
+add_action('wp_ajax_action', 'address_correction_get_ajax_json');
+add_action('wp_ajax_nopriv_action', 'address_correction_get_ajax_json');
 
 add_action('wp_footer', function () {
     require_once __DIR__.'/modal.php';
 });
 
-function address_correction_getAjaxJson()
+function address_correction_get_ajax_json()
 {
     require_once __DIR__.'/sdk/autoload.php';
 
@@ -61,7 +61,7 @@ function address_correction_getAjaxJson()
             {
                 $cityExpansionRequest = new EnderecoCityExpansionRequest();
                 $cityExpansionRequest->setCity($city);
-                $data = address_correction_getEndercoData($cityExpansionRequest);
+                $data = address_correction_get_enderco_data($cityExpansionRequest);
             }
             break;
         case 'zip':
@@ -69,7 +69,7 @@ function address_correction_getAjaxJson()
             {
                 $postCodeExpansionRequest = new EnderecoPostCodeExpansionRequest();
                 $postCodeExpansionRequest->setPostcode($zip);
-                $data = address_correction_getEndercoData($postCodeExpansionRequest);
+                $data = address_correction_get_enderco_data($postCodeExpansionRequest);
             }
             break;
         case 'address':
@@ -79,7 +79,7 @@ function address_correction_getAjaxJson()
                 $streetExpansionRequest->setPostcode($zip);
                 $streetExpansionRequest->setCity($city);
                 $streetExpansionRequest->setStreet($address);
-                $data = address_correction_getEndercoData($streetExpansionRequest);
+                $data = address_correction_get_enderco_data($streetExpansionRequest);
             }
             break;
         case 'submit':
@@ -87,14 +87,14 @@ function address_correction_getAjaxJson()
             $addressCheckRequest->setPostcode($zip);
             $addressCheckRequest->setCity($city);
             $addressCheckRequest->setStreet($address);
-            $data = address_correction_getEndercoData($addressCheckRequest);
+            $data = address_correction_get_enderco_data($addressCheckRequest);
             break;
     }
     echo json_encode($data);
     wp_die();
 }
 
-function address_correction_getEndercoData($expansionRequest)
+function address_correction_get_enderco_data($expansionRequest)
 {
     $data = [];
 
@@ -145,14 +145,14 @@ add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
 }, 50 );
 
 add_action( 'woocommerce_settings_tabs_settings_tab_demo', function () {
-    woocommerce_admin_fields( address_correction_getContent() );
+    woocommerce_admin_fields( address_correction_get_config_content() );
 });
 
 add_action( 'woocommerce_update_options_settings_tab_demo', function () {
-    woocommerce_update_options( address_correction_getContent() );
+    woocommerce_update_options( address_correction_get_config_content() );
 });
 
-function address_correction_getContent()
+function address_correction_get_config_content()
 {
     $settings = array(
         'title' => array(
