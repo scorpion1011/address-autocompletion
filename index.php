@@ -140,7 +140,7 @@ function address_correction_getEndercoData($expansionRequest)
 }
 
 add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
-    $settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'autocomplete-config' );
+    $settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'address-autocompletion' );
     return $settings_tabs;
 }, 50 );
 
@@ -156,39 +156,40 @@ function address_correction_getContent()
 {
     $settings = array(
         'title' => array(
-            'name'     => __( '', 'autocomplete-config' ),
+            'name'     => '',
             'type'     => 'title',
             'desc'     => '',
             'id'       => 'section_title'
         ),
         'mandator' => array(
-            'name' => __( 'Mandator', 'autocomplete-config' ),
+            'name' => __( 'Mandator', 'address-autocompletion' ),
             'type' => 'text',
             'desc' => '',
             'id'   => 'mandator'
         ),
         'user' => array(
-            'name' => __( 'User', 'autocomplete-config' ),
+            'name' => __( 'User', 'address-autocompletion' ),
             'type' => 'text',
             'desc' => '',
             'id'   => 'user'
         ),
         'password' => array(
-            'name' => __( 'Password', 'autocomplete-config' ),
+            'name' => __( 'Password', 'address-autocompletion' ),
             'type' => 'text',
             'desc' => '',
             'id'   => 'password'
         ),
         'timeout' => array(
-            'name' => __( 'Timeout', 'autocomplete-config' ),
+            'name' => __( 'Timeout', 'address-autocompletion' ),
             'type' => 'text',
-            'desc' => '',
+            'desc' => __( '150ms on empty', 'address-autocompletion' ),
+            'desc_tip' => __( 'The delay in milliseconds between when a keystroke occurs and when a search is performed', 'address-autocompletion' ),
             'id'   => 'self_timeout'
         ),
         'logging' => array(
-            'name' => __( 'Logging', 'autocomplete-config' ),
+            'name' => __( 'Logging', 'address-autocompletion' ),
             'type' => 'checkbox',
-            'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console' ),
+            'desc' => __( 'Check this box if you want to be notified of sent queries in the Developer Console', 'address-autocompletion' ),
             'id'   => 'logging'
         ),
         'end' => array(
