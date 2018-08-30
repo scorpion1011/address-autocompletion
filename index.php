@@ -49,13 +49,24 @@ function address_correction_get_ajax_json()
     require_once __DIR__.'/sdk/autoload.php';
 
     $data = [];
+
     $sender  = empty( $_GET['sender']  ) ? '' : esc_attr( $_GET['sender']  );
     $zip     = empty( $_GET['zip']     ) ? '' : esc_attr( $_GET['zip']     );
     $city    = empty( $_GET['city']    ) ? '' : esc_attr( $_GET['city']    );
     $address = empty( $_GET['address'] ) ? '' : esc_attr( $_GET['address'] );
 
+    $name    = empty( $_GET['name']    ) ? '' : esc_attr( $_GET['name']    );
+
     switch($sender)
     {
+        case 'name':
+            if(!empty($name))
+            {
+                $firstNameCheckRequest = new EnderecoFirstNameCheckRequest();
+                $firstNameCheckRequest->setFirstName($name);
+                $data = address_correction_get_enderco_data($firstNameCheckRequest);
+            }
+            break;
         case 'city':
             if(!empty($city))
             {
@@ -102,7 +113,8 @@ function address_correction_get_enderco_data($expansionRequest)
     {
         $client = EnderecoClient::getInstance( get_option('mandator'), get_option('user'), get_option('password') );
 
-        foreach($client->executeRequest($expansionRequest)->getElements() as $expansion)
+        $results = $client->executeRequest($expansionRequest);
+        foreach($results->getElements() as $expansion)
         {
             if($expansion instanceof OrwellInputAssistantPostCodeCityExpansionResultElement)
             {
@@ -115,6 +127,26 @@ function address_correction_get_enderco_data($expansionRequest)
                         'city'     => $city,
                     ];
                 }
+            }
+            elseif($expansion instanceof OrwellInputAssistantFirstNameCheckResultElement)
+            {
+                $gender = 'both';
+                if(-1 !== $results->hasStatus(EnderecoFirstNameCheckStatusEnum::FIRST_NAME_NOT_FOUND))
+                {
+                    $gender = 'undefined';
+                }
+                elseif(-1 !== $results->hasStatus(EnderecoFirstNameCheckStatusEnum::FIRST_NAME_IS_FEMALE))
+                {
+                    $gender = 'female';
+                }
+                elseif(-1 !== $results->hasStatus(EnderecoFirstNameCheckStatusEnum::FIRST_NAME_IS_MALE))
+                {
+                    $gender = 'male';
+                }
+                $data[] = [
+                    'name'    => $expansion->getFirstName(),
+                    'gender'  => $gender,
+                ];
             }
             else
             {
