@@ -150,7 +150,14 @@ var AddressCorrection = {
                     addressCorrection.xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
                         addressCorrection.log('Response is : ' + response);
                         var arrayOfObjectProperty = [];
-                        jQuery.each(jQuery.parseJSON(response), function (key, value) {
+                        var responseJson = {};
+                        try {
+                            responseJson = jQuery.parseJSON(response);
+                        }
+                        catch(err) {
+                            addressCorrection.log('Can\'t parse the server response.');
+                        }
+                        jQuery.each(responseJson, function (key, value) {
                             arrayOfObjectProperty.push(value);
                         });
                         suggests(arrayOfObjectProperty);
@@ -243,15 +250,21 @@ var AddressCorrection = {
 
         addressCorrection.suggestions = [];
         xhr = jQuery.get(myPlugin.ajaxurl, data, function (response) {
-            var jsonObj = jQuery.parseJSON(response);
-
             addressCorrection.log('Response is : ' + response);
 
-            if (jsonObj.length == 0 || jsonObj.length == 1 && jsonObj[0].city == data.city && jsonObj[0].postcode == data.zip && jsonObj[0].street == data.address) {
+            var responseJson = {};
+            try {
+                responseJson = jQuery.parseJSON(response);
+            }
+            catch(err) {
+                addressCorrection.log('Can\'t parse the server response.');
+            }
+
+            if (responseJson.length == 0 || responseJson.length == 1 && responseJson[0].city == data.city && responseJson[0].postcode == data.zip && responseJson[0].street == data.address) {
                 addressCorrection.disable();
                 return;
             }
-            addressCorrection.suggestions = jQuery.parseJSON(response);
+            addressCorrection.suggestions = responseJson;
         });
         addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
 
