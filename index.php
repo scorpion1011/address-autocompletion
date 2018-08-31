@@ -232,24 +232,23 @@ function address_correction_get_config_content()
     return apply_filters( 'wc_settings_tab_demo_settings', $settings );
 }
 
-add_action('woocommerce_before_order_notes', function( $checkout ) {
-	woocommerce_form_field( 'gender', array(
-	    'type'          => 'select',
-	    'class'         => array( 'wps-drop' ),
-	    'label'         => __( 'Gender *', 'address-autocompletion' ),
-		'required'      => true,
-	    'options'       => array(
-			'undefined'		=> '',
-	    	'male'		=> __( 'Male', 'address-autocompletion' ),
-	        'female'	=> __( 'Female', 'address-autocompletion' )
-	    )
- ),
-	$checkout->get_value( 'gender' ));
+add_action('woocommerce_default_address_fields', function( $fields ) {
+	return array_merge(['gender' => array(
+		'type'       => 'select',
+		'label'      => __( 'Gender', 'address-autocompletion' ),
+		'required'   => true,
+		'priority'   => 8,
+		'options'    => array(
+			''       => '',
+			'male'   => __( 'Male', 'address-autocompletion' ),
+			'female' => __( 'Female', 'address-autocompletion' )
+		)
+	)], $fields);
 });
 
 add_filter('woocommerce_default_address_fields', function($fields) {
     $fields_order = [
-        'company', 'first_name', 'last_name', 'gender', 'country',
+        'company', 'gender', 'first_name', 'last_name', 'country',
         'state', 'city', 'postcode', 'address_1', 'address_2'
     ];
 
