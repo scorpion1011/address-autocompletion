@@ -15,19 +15,21 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links)
 });
 
 add_action( 'wp_enqueue_scripts', function () {
-	wp_enqueue_script( 'custom-script', plugins_url() . '/address-autocompletion/js/address-correction.js', ['jquery'] );
-	wp_enqueue_style( 'autocomplete.css', plugins_url() . '/address-autocompletion/js/jquery.auto-complete.css' );
-	wp_enqueue_script( 'autocomplete', plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
-	wp_enqueue_style( 'bootstrap.min.css', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
-	wp_enqueue_script( 'bootstrap.min.js', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
+	wp_enqueue_script( 'address-correction',    plugins_url() . '/address-autocompletion/js/address-correction.js', ['jquery'] );
+	wp_enqueue_script( 'autocomplete',     plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
+	wp_enqueue_script( 'bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
-	$delay = get_option('self_timeout');
-	wp_localize_script( 'custom-script', 'addressAutocompletion', [
-			'ajaxurl' => admin_url('admin-ajax.php'),
+	wp_enqueue_style( 'autocomplete',  plugins_url() . '/address-autocompletion/js/jquery.auto-complete.css' );
+	wp_enqueue_style( 'bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
+
+	wp_add_inline_style( 'autocomplete', ' .wrong-gender { border: 1px solid yellow; background-color: #ffff0026 !important; } ' );
+
+	wp_localize_script( 'address-correction', 'addressAutocompletion', [
+			'ajaxurl'                 => admin_url('admin-ajax.php'),
 			'isConsoleResponseNeeded' => get_option('logging') == 'yes' ? true : false,
-			'delay' => $delay == '' ? 150 : $delay,
-			'billing' => __( 'Is the billing address correct?', 'address-autocompletion'  ),
-			'shipping' => __( 'Is the shipping address correct?', 'address-autocompletion'  )
+			'delay'                   => intval(get_option('self_timeout', 150)),
+			'billing'                 => __( 'Is the billing address correct?', 'address-autocompletion' ),
+			'shipping'                => __( 'Is the shipping address correct?', 'address-autocompletion' )
 		]
 	);
 });
@@ -185,7 +187,7 @@ add_action( 'woocommerce_update_options_address-autocompletion', function () {
 
 function address_correction_get_config_content()
 {
-	$settings = [
+	return [
 		'title' => [
 			'name'     => '',
 			'type'     => 'title',
@@ -228,8 +230,11 @@ function address_correction_get_config_content()
 			'id' => 'section_end'
 		]
 	];
-	return apply_filters( 'wc_address-autocompletion_settings', $settings );
 }
+
+add_filter( 'woocommerce_admin_settings_sanitize_option_self_timeout', function ($value) {
+	return max(intval($value), 0);
+});
 
 add_filter('woocommerce_default_address_fields', function($fields) {
 
@@ -238,7 +243,6 @@ add_filter('woocommerce_default_address_fields', function($fields) {
 		'label'      => __( 'Gender', 'address-autocompletion' ),
 		'required'   => true,
 		'options'    => [
-			''       => '',
 			'male'   => __( 'Male', 'address-autocompletion' ),
 			'female' => __( 'Female', 'address-autocompletion' )
 		]

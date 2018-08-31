@@ -41,10 +41,21 @@ jQuery(function () {
 
 var AddressCorrection = {
     xhr: null,
+    timerId: 0,
     groupPrefix: null,
     confirmationHeader: null,
     dataConfirmed: null,
     blockOverlayConfig: null,
+
+    getGenderSelect: function () {
+        var addressCorrection = this;
+        return jQuery('#' + addressCorrection.groupPrefix + '_gender');
+    },
+
+    getNameInput: function () {
+        var addressCorrection = this;
+        return jQuery('#' + addressCorrection.groupPrefix + '_first_name');
+    },
 
     getAddressInput: function () {
         var addressCorrection = this;
@@ -59,6 +70,11 @@ var AddressCorrection = {
     getZipInput: function () {
         var addressCorrection = this;
         return jQuery('#' + addressCorrection.groupPrefix + '_postcode');
+    },
+
+    getName: function () {
+        var addressCorrection = this;
+        return addressCorrection.getNameInput().val();
     },
 
     getAddress: function () {
@@ -84,17 +100,40 @@ var AddressCorrection = {
         addressCorrection.dataConfirmed = 0;
         addressCorrection.blockOverlayConfig = blockOverlayConfig;
 
-        jQuery('#' + addressCorrection.groupPrefix + '_city, #' + addressCorrection.groupPrefix + '_postcode').on('input', function () {
+        addressCorrection.getCityInput().on('input', function () {
             addressCorrection.dataConfirmed = 0;
         });
-
-        jQuery('#' + addressCorrection.groupPrefix + '_address_1').on('input', function () {
+        addressCorrection.getZipInput().on('input', function () {
+            addressCorrection.dataConfirmed = 0;
+        });
+        addressCorrection.getAddressInput().on('input', function () {
             addressCorrection.dataConfirmed = 2;
         });
+        addressCorrection.getNameInput().on('input', function () {
+            clearTimeout(addressCorrection.timerId);
+            addressCorrection.timerId = setTimeout(function() {
+                addressCorrection.request(addressCorrection.getNameInput().parent(), {
+                        action: 'action',
+                        name: addressCorrection.getName(),
+                        sender: 'name'
+                    }, function(data) {
+                        if(Array.isArray(data)) {
+                            addressCorrection.getNameInput().val(data[0]['name']);
+                            addressCorrection.getGenderSelect().removeClass('wrong-gender');
+                            if(
+                                'male'   == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
+                                'female' == addressCorrection.getGenderSelect().val() && 'male'   == data[0]['gender']
+                            ) {
+                                addressCorrection.getGenderSelect().addClass('wrong-gender');
+                            }
+                        }
+                    });
+            }, addressAutocompletion.delay);
+        });
 
-        jQuery('#' + addressCorrection.groupPrefix + '_city').autoComplete(addressCorrection.autoCompleteConfig('city'));
-        jQuery('#' + addressCorrection.groupPrefix + '_postcode').autoComplete(addressCorrection.autoCompleteConfig('zip'));
-        jQuery('#' + addressCorrection.groupPrefix + '_address_1').autoComplete(addressCorrection.autoCompleteConfig('address'));
+        addressCorrection.getCityInput()   .autoComplete(addressCorrection.autoCompleteConfig('city'));
+        addressCorrection.getZipInput()    .autoComplete(addressCorrection.autoCompleteConfig('zip'));
+        addressCorrection.getAddressInput().autoComplete(addressCorrection.autoCompleteConfig('address'));
     },
 
     needRequest: function (data) {
@@ -146,29 +185,9 @@ var AddressCorrection = {
                 if (addressCorrection.needRequest(data)) {
                     var targetInputParent = addressCorrection.getTargetInput(sender).parent();
 
-                    jQuery(targetInputParent).block(addressCorrection.blockOverlayConfig);
-                    addressCorrection.xhr = jQuery.get(addressAutocompletion.ajaxurl, data, function (response) {
-                        addressCorrection.log('Response is : ' + response);
-                        var arrayOfObjectProperty = [];
-                        var responseJson = {};
-                        try {
-                            responseJson = jQuery.parseJSON(response);
-                        }
-                        catch(err) {
-                            addressCorrection.log('Can\'t parse the server response.');
-                        }
-                        jQuery.each(responseJson, function (key, value) {
-                            arrayOfObjectProperty.push(value);
-                        });
-                        suggests(arrayOfObjectProperty);
-                    })
-                    .fail(function () {
-                        addressCorrection.log('Request has been cancelled.');
-                    })
-                    .always(function () {
-                        jQuery(targetInputParent).unblock();
+                    addressCorrection.xhr = addressCorrection.request(jQuery(targetInputParent), data, function(data) {
+                        suggests(data);
                     });
-                    addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
                 }
                 suggests([]);
             },
@@ -212,6 +231,37 @@ var AddressCorrection = {
         };
     },
 
+    request: function (parent, data, onSuccess) {
+        var addressCorrection = this;
+
+        parent.block(addressCorrection.blockOverlayConfig);
+
+        var xhr = jQuery.get(addressAutocompletion.ajaxurl, data, function (response) {
+            addressCorrection.log('Response is : ' + response);
+            var arrayOfObjectProperty = [];
+            var responseJson = {};
+            try {
+                responseJson = jQuery.parseJSON(response);
+            }
+            catch(err) {
+                addressCorrection.log('Can\'t parse the server response.');
+            }
+            jQuery.each(responseJson, function (key, value) {
+                arrayOfObjectProperty.push(value);
+            });
+            onSuccess(arrayOfObjectProperty);
+        })
+        .fail(function () {
+            addressCorrection.log('Request has been cancelled.');
+        })
+        .always(function () {
+            parent.unblock();
+        });
+        addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
+        
+        return xhr;
+    },
+    
     isGermany: function () {
         var addressCorrection = this;
 
