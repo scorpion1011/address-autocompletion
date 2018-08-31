@@ -10,7 +10,7 @@ if(!defined('ABSPATH'))
 }
 
 add_filter('plugin_action_links_' . plugin_basename( __FILE__ ), function ( $links ) {
-    array_unshift($links, '<a href="/wp-admin/admin.php?page=wc-settings&tab=settings_tab_demo">' . __( 'Settings' ) . '</a>');
+    array_unshift($links, '<a href="/wp-admin/admin.php?page=wc-settings&tab=address-autocompletion">' . __( 'Settings' ) . '</a>');
     return $links;
 });
 
@@ -172,15 +172,15 @@ function address_correction_get_enderco_data($expansionRequest)
 }
 
 add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
-    $settings_tabs['settings_tab_demo'] = __( 'Autocomplete config', 'address-autocompletion' );
+    $settings_tabs['address-autocompletion'] = __( 'Autocomplete config', 'address-autocompletion' );
     return $settings_tabs;
 }, 50 );
 
-add_action( 'woocommerce_settings_tabs_settings_tab_demo', function () {
+add_action( 'woocommerce_settings_tabs_address-autocompletion', function () {
     woocommerce_admin_fields( address_correction_get_config_content() );
 });
 
-add_action( 'woocommerce_update_options_settings_tab_demo', function () {
+add_action( 'woocommerce_update_options_address-autocompletion', function () {
     woocommerce_update_options( address_correction_get_config_content() );
 });
 
@@ -229,7 +229,7 @@ function address_correction_get_config_content()
             'id' => 'section_end'
         )
     );
-    return apply_filters( 'wc_settings_tab_demo_settings', $settings );
+    return apply_filters( 'wc_address-autocompletion_settings', $settings );
 }
 
 add_filter('woocommerce_default_address_fields', function($fields) {
