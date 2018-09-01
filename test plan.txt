@@ -20,3 +20,7 @@
 17)choose corrected variant => textboxes changed (4forms)................++++
 18)localization (change WP lang to DE => check popup labels)................+       (f5)
 19)plugin disable if server not response....................................+
+20)male name + male => ok (vice versa)(4forms)...........................+
+21)male name + female => warning (vice versa)(4forms)....................++
+22)damaged log => undefined => male/female ok...............................
+23)both (e.g. max) => male/female ok........................................
