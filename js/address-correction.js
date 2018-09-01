@@ -124,13 +124,15 @@ var AddressCorrection = {
 					sender: 'name'
 				}, function(data) {
 					if(Array.isArray(data)) {
-						addressCorrection.getNameInput().val(data[0]['name']);
-						addressCorrection.getGenderSelect().removeClass('wrong-gender');
-						if(
-							'male'   == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
-							'female' == addressCorrection.getGenderSelect().val() && 'male'   == data[0]['gender']
-						) {
-							addressCorrection.getGenderSelect().addClass('wrong-gender');
+						if (data.length > 0) {
+							addressCorrection.getNameInput().val(data[0]['name']);
+							addressCorrection.getGenderSelect().removeClass('wrong-gender');
+							if(
+								'male'   == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
+								'female' == addressCorrection.getGenderSelect().val() && 'male'   == data[0]['gender']
+							) {
+								addressCorrection.getGenderSelect().addClass('wrong-gender');
+							}
 						}
 					}
 				});
