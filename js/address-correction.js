@@ -40,13 +40,14 @@ jQuery(function () {
 });
 
 var AddressCorrection = {
-    xhrAutoComplete: null,
-    xhrName: null,
-    timerId: 0,
-    groupPrefix: null,
+    xhrAutoComplete:    null,
+    xhrName:            null,
+    timerId:            0,
+    groupPrefix:        null,
     confirmationHeader: null,
-    dataConfirmed: null,
+    dataConfirmed:      null,
     blockOverlayConfig: null,
+    gender:             'undefined',
 
     getGenderSelect: function () {
         var addressCorrection = this;
@@ -125,20 +126,24 @@ var AddressCorrection = {
                 }, function (data) {
                     if (Array.isArray(data) && data.length > 0) {
                         addressCorrection.getNameInput().val(data[0]['name']);
-                        addressCorrection.getGenderSelect().removeClass('wrong-gender');
-                        if (
-                            'male' == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
-                            'female' == addressCorrection.getGenderSelect().val() && 'male' == data[0]['gender']
-                        ) {
-                            addressCorrection.getGenderSelect().addClass('wrong-gender');
-                        }
+                        addressCorrection.gender = data[0]['gender'];
+                        addressCorrection.getGenderSelect().change();
                     }
                 });
             }, addressAutocompletion.delay);
         });
+        addressCorrection.getGenderSelect().change(function () {
+            jQuery(this).removeClass('wrong-gender');
+            if (
+                'male'   == jQuery(this).val() && 'female' == addressCorrection.gender ||
+                'female' == jQuery(this).val() && 'male'   == addressCorrection.gender
+            ) {
+                jQuery(this).addClass('wrong-gender');
+            }
+        });
 
-        addressCorrection.getCityInput().autoComplete(addressCorrection.autoCompleteConfig('city'));
-        addressCorrection.getZipInput().autoComplete(addressCorrection.autoCompleteConfig('zip'));
+        addressCorrection.getCityInput()   .autoComplete(addressCorrection.autoCompleteConfig('city'));
+        addressCorrection.getZipInput()    .autoComplete(addressCorrection.autoCompleteConfig('zip'));
         addressCorrection.getAddressInput().autoComplete(addressCorrection.autoCompleteConfig('address'));
     },
 
@@ -225,12 +230,12 @@ var AddressCorrection = {
             },
             onSelect: function (e, term, item) {
                 if ('address' == sender) {
-                    jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(item).attr('data-street'));
+                    addressCorrection.getAddressInput().val(jQuery(item).attr('data-street'));
                     addressCorrection.disable();
                 }
                 else {
-                    jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(item).attr('data-city'));
-                    jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(item).attr('data-postcode'));
+                    addressCorrection.getCityInput().val(jQuery(item).attr('data-city'));
+                    addressCorrection.getZipInput() .val(jQuery(item).attr('data-postcode'));
                     addressCorrection.dataConfirmed = 2;
                 }
             }
@@ -287,7 +292,7 @@ var AddressCorrection = {
     needConfirmation: function () {
         var addressCorrection = this;
         //check if this kind of address presents and visible for user
-        if (!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(":visible")) {
+        if (!jQuery('#' + addressCorrection.groupPrefix + '_country').length || !jQuery('#' + addressCorrection.groupPrefix + '_country').is(':visible')) {
             return false;
         }
         return addressCorrection.isGermany() && (addressCorrection.dataConfirmed != 3);
@@ -368,9 +373,9 @@ var AddressCorrection = {
 
         jQuery.each(jQuery('input[name=' + addressCorrection.groupPrefix + 'addressCorrection]'), function (index, node) {
             if (jQuery(node).attr('checked') == 'checked' && jQuery(node).attr('data-id') != 0) {
-                jQuery('#' + addressCorrection.groupPrefix + '_city').val(jQuery(node).attr('data-city'));
-                jQuery('#' + addressCorrection.groupPrefix + '_postcode').val(jQuery(node).attr('data-postcode'));
-                jQuery('#' + addressCorrection.groupPrefix + '_address_1').val(jQuery(node).attr('data-address'));
+                addressCorrection.getCityInput()   .val(jQuery(node).attr('data-city'));
+                addressCorrection.getZipInput()    .val(jQuery(node).attr('data-postcode'));
+                addressCorrection.getAddressInput().val(jQuery(node).attr('data-address'));
             }
         });
 
