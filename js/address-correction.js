@@ -40,8 +40,8 @@ jQuery(function () {
 });
 
 var AddressCorrection = {
-    xhrAutocompletion: null,
-	xhrName: null,
+    xhrAutoComplete: null,
+    xhrName: null,
     timerId: 0,
     groupPrefix: null,
     confirmationHeader: null,
@@ -111,36 +111,34 @@ var AddressCorrection = {
             addressCorrection.dataConfirmed = 2;
         });
         addressCorrection.getNameInput().on('input', function () {
-			try {
-                    addressCorrection.xhrName.abort();
-                }
-                catch (e) {
-                }
+            try {
+                addressCorrection.xhrName.abort();
+            }
+            catch (e) {
+            }
             clearTimeout(addressCorrection.timerId);
-            addressCorrection.timerId = setTimeout(function() {
+            addressCorrection.timerId = setTimeout(function () {
                 addressCorrection.xhrName = addressCorrection.request(addressCorrection.getNameInput().parent(), {
-					action: 'action',
-					name: addressCorrection.getName(),
-					sender: 'name'
-				}, function(data) {
-					if(Array.isArray(data)) {
-						if (data.length > 0) {
-							addressCorrection.getNameInput().val(data[0]['name']);
-							addressCorrection.getGenderSelect().removeClass('wrong-gender');
-							if(
-								'male'   == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
-								'female' == addressCorrection.getGenderSelect().val() && 'male'   == data[0]['gender']
-							) {
-								addressCorrection.getGenderSelect().addClass('wrong-gender');
-							}
-						}
-					}
-				});
+                    action: 'action',
+                    name: addressCorrection.getName(),
+                    sender: 'name'
+                }, function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        addressCorrection.getNameInput().val(data[0]['name']);
+                        addressCorrection.getGenderSelect().removeClass('wrong-gender');
+                        if (
+                            'male' == addressCorrection.getGenderSelect().val() && 'female' == data[0]['gender'] ||
+                            'female' == addressCorrection.getGenderSelect().val() && 'male' == data[0]['gender']
+                        ) {
+                            addressCorrection.getGenderSelect().addClass('wrong-gender');
+                        }
+                    }
+                });
             }, addressAutocompletion.delay);
         });
 
-        addressCorrection.getCityInput()   .autoComplete(addressCorrection.autoCompleteConfig('city'));
-        addressCorrection.getZipInput()    .autoComplete(addressCorrection.autoCompleteConfig('zip'));
+        addressCorrection.getCityInput().autoComplete(addressCorrection.autoCompleteConfig('city'));
+        addressCorrection.getZipInput().autoComplete(addressCorrection.autoCompleteConfig('zip'));
         addressCorrection.getAddressInput().autoComplete(addressCorrection.autoCompleteConfig('address'));
     },
 
@@ -179,7 +177,7 @@ var AddressCorrection = {
             delay: addressAutocompletion.delay,
             source: function (input, suggests) {
                 try {
-                    addressCorrection.xhrAutocompletion.abort();
+                    addressCorrection.xhrAutoComplete.abort();
                 }
                 catch (e) {
                 }
@@ -193,7 +191,7 @@ var AddressCorrection = {
                 if (addressCorrection.needRequest(data)) {
                     var targetInputParent = addressCorrection.getTargetInput(sender).parent();
 
-                    addressCorrection.xhrAutocompletion = addressCorrection.request(jQuery(targetInputParent), data, function(data) {
+                    addressCorrection.xhrAutoComplete = addressCorrection.request(jQuery(targetInputParent), data, function (data) {
                         suggests(data);
                     });
                 }
@@ -251,7 +249,7 @@ var AddressCorrection = {
             try {
                 responseJson = jQuery.parseJSON(response);
             }
-            catch(err) {
+            catch (err) {
                 addressCorrection.log('Can\'t parse the server response.');
             }
             jQuery.each(responseJson, function (key, value) {
@@ -266,10 +264,10 @@ var AddressCorrection = {
             parent.unblock();
         });
         addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
-        
+
         return xhr;
     },
-    
+
     isGermany: function () {
         var addressCorrection = this;
 
@@ -314,7 +312,7 @@ var AddressCorrection = {
             try {
                 responseJson = jQuery.parseJSON(response);
             }
-            catch(err) {
+            catch (err) {
                 addressCorrection.log('Can\'t parse the server response.');
             }
 
