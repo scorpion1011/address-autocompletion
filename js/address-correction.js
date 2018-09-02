@@ -119,7 +119,7 @@ var AddressCorrection = {
             }
             clearTimeout(addressCorrection.timerId);
             addressCorrection.timerId = setTimeout(function () {
-                addressCorrection.xhrName = addressCorrection.request(addressCorrection.getNameInput().parent(), {
+                addressCorrection.xhrName = addressCorrection.request(addressCorrection.getNameInput(), {
                     action: 'action',
                     name: addressCorrection.getName(),
                     sender: 'name'
@@ -194,9 +194,7 @@ var AddressCorrection = {
                     sender: sender
                 };
                 if (addressCorrection.needRequest(data)) {
-                    var targetInputParent = addressCorrection.getTargetInput(sender).parent();
-
-                    addressCorrection.xhrAutoComplete = addressCorrection.request(jQuery(targetInputParent), data, function (data) {
+                    addressCorrection.xhrAutoComplete = addressCorrection.request(addressCorrection.getTargetInput(sender), data, function (data) {
                         suggests(data);
                     });
                 }
@@ -242,15 +240,17 @@ var AddressCorrection = {
         };
     },
 
-    request: function (parent, data, onSuccess) {
+    request: function (element, data, onSuccess) {
         var addressCorrection = this;
 
+        var parent = element.parent();
+        element.prop('disabled', true);
         parent.block(addressCorrection.blockOverlayConfig);
 
         var xhr = jQuery.get(addressAutocompletion.ajaxurl, data, function (response) {
             addressCorrection.log('Response is : ' + response);
             var arrayOfObjectProperty = [];
-            var responseJson = {};
+            var responseJson          = {};
             try {
                 responseJson = jQuery.parseJSON(response);
             }
@@ -266,6 +266,7 @@ var AddressCorrection = {
             addressCorrection.log('Request has been cancelled.');
         })
         .always(function () {
+            element.prop('disabled', false).focus();
             parent.unblock();
         });
         addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
