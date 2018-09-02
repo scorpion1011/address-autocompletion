@@ -14,7 +14,7 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links)
 	return $links;
 });
 
-add_action( 'wp_enqueue_scripts', function () {
+add_action('wp_enqueue_scripts', function () {
 	wp_enqueue_script( 'address-correction',    plugins_url() . '/address-autocompletion/js/address-correction.js', ['jquery'] );
 	wp_enqueue_script( 'autocomplete',     plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
 	wp_enqueue_script( 'bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
@@ -172,16 +172,16 @@ function address_correction_get_enderco_data($expansionRequest)
 	return $data;
 }
 
-add_filter( 'woocommerce_settings_tabs_array', function ($settings_tabs) {
+add_filter('woocommerce_settings_tabs_array', function ($settings_tabs) {
 	$settings_tabs['address-autocompletion'] = __( 'Autocomplete config', 'address-autocompletion' );
 	return $settings_tabs;
 }, 50 );
 
-add_action( 'woocommerce_settings_tabs_address-autocompletion', function () {
+add_action('woocommerce_settings_tabs_address-autocompletion', function () {
 	woocommerce_admin_fields( address_correction_get_config_content() );
 });
 
-add_action( 'woocommerce_update_options_address-autocompletion', function () {
+add_action('woocommerce_update_options_address-autocompletion', function () {
 	woocommerce_update_options( address_correction_get_config_content() );
 });
 
@@ -232,8 +232,12 @@ function address_correction_get_config_content()
 	];
 }
 
-add_filter( 'woocommerce_admin_settings_sanitize_option_self_timeout', function ($value) {
-	return max(intval($value), 0);
+add_filter('woocommerce_admin_settings_sanitize_option_self_timeout', function ($value) {
+    if(ctype_digit(strval($value)))
+    {
+        return max(intval($value), 0);
+    }
+	return 150;
 });
 
 add_filter('woocommerce_default_address_fields', function($fields) {
