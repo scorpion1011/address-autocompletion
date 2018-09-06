@@ -118,19 +118,21 @@ var AddressCorrection = {
             catch (e) {
             }
             clearTimeout(addressCorrection.timerId);
-            addressCorrection.timerId = setTimeout(function () {
-                addressCorrection.xhrName = addressCorrection.request(addressCorrection.getNameInput(), {
-                    action: 'action',
-                    name: addressCorrection.getName(),
-                    sender: 'name'
-                }, function (data) {
-                    if (Array.isArray(data) && data.length > 0) {
-                        addressCorrection.getNameInput().val(data[0]['name']);
-                        addressCorrection.gender = data[0]['gender'];
-                        addressCorrection.getGenderSelect().change();
-                    }
-                });
-            }, addressAutocompletion.delay);
+            if(addressCorrection.getNameInput().val().length > 0) {
+                addressCorrection.timerId = setTimeout(function () {
+                    addressCorrection.xhrName = addressCorrection.request(addressCorrection.getNameInput(), {
+                        action: 'action',
+                        name: addressCorrection.getName(),
+                        sender: 'name'
+                    }, function (data) {
+                        if (Array.isArray(data) && data.length > 0) {
+                            addressCorrection.getNameInput().val(data[0]['name']);
+                            addressCorrection.gender = data[0]['gender'];
+                            addressCorrection.getGenderSelect().change();
+                        }
+                    });
+                }, addressAutocompletion.delay);
+            }
         });
         addressCorrection.getGenderSelect().change(function () {
             jQuery(this).removeClass('wrong-gender');
@@ -178,9 +180,10 @@ var AddressCorrection = {
         var addressCorrection = this;
 
         return {
-            minChars: 0,
-            delay: addressAutocompletion.delay,
-            source: function (input, suggests) {
+            minChars:   0,
+            cache:      false,
+            delay:      addressAutocompletion.delay,
+            source:     function (input, suggests) {
                 try {
                     addressCorrection.xhrAutoComplete.abort();
                 }
@@ -226,7 +229,7 @@ var AddressCorrection = {
                     .html(str.replace(re, '<b>$1</b>'));
                 return jqDiv.html();
             },
-            onSelect: function (e, term, item) {
+            onSelect:   function (e, term, item) {
                 if ('address' == sender) {
                     addressCorrection.getAddressInput().val(jQuery(item).attr('data-street'));
                     addressCorrection.disable();
@@ -244,7 +247,6 @@ var AddressCorrection = {
         var addressCorrection = this;
 
         var parent = element.parent();
-        element.prop('disabled', true);
         parent.block(addressCorrection.blockOverlayConfig);
 
         var xhr = jQuery.get(addressAutocompletion.ajaxurl, data, function (response) {
@@ -266,7 +268,6 @@ var AddressCorrection = {
             addressCorrection.log('Request has been cancelled.');
         })
         .always(function () {
-            element.prop('disabled', false).focus();
             parent.unblock();
         });
         addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
