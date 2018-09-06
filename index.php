@@ -144,10 +144,20 @@ function address_correction_get_enderco_data($expansionRequest)
 				{
 					$gender = 'male';
 				}
-				$data[] = [
-					'name'    => $expansion->getFirstName(),
-					'gender'  => $gender,
-				];
+				if($expansion->getFirstName())
+				{
+					$data[] = [
+						'name'    => $expansion->getFirstName(),
+						'gender'  => $gender,
+					];
+				}
+				else
+				{
+					$data[] = [
+						'name'    => $expansionRequest->getFirstName(),
+						'gender'  => 'undefined',
+					];
+				}
 			}
 			else
 			{
