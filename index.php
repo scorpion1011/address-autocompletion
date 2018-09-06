@@ -243,54 +243,50 @@ function address_correction_get_config_content()
 }
 
 add_filter('woocommerce_admin_settings_sanitize_option_self_timeout', function ($value) {
-    if(ctype_digit(strval($value)))
-    {
-        return max(intval($value), 0);
-    }
+	if(ctype_digit(strval($value)))
+	{
+		return max(intval($value), 0);
+	}
 	return 150;
 });
 
-add_filter('woocommerce_default_address_fields', function($fields) {
+add_filter('woocommerce_get_country_locale', function($fields) {
+	unset($fields['DE']['postcode']['priority']);
+	return $fields;
+});
 
-	$fields = array_merge(['gender' => [
-		'type'       => 'select',
-		'label'      => __( 'Gender', 'address-autocompletion' ),
-		'required'   => true,
-		'options'    => [
-			'male'   => __( 'Male', 'address-autocompletion' ),
-			'female' => __( 'Female', 'address-autocompletion' )
-		]
-	]], $fields);
-
+add_filter('woocommerce_get_country_locale_default', function($fields) {
 	$fields_order = [
 		'company', 'gender', 'first_name', 'last_name', 'country',
 		'state', 'city', 'postcode', 'address_1', 'address_2'
 	];
 
-	// Set fields priority
-	$priority = 10;
-
-	foreach ($fields_order as $key)
+	$priority_shift = 10 * count($fields_order) + 10;
+	foreach ($fields as $key => &$value)
 	{
-		if (!isset($fields[$key]))
-		{
-			continue;
-		}
-
-		$fields[$key]['priority'] = $priority;
-		$priority += 10;
+		$value['priority'] = isset($value['priority']) ? $value['priority'] : 0 + $priority_shift;
 	}
 
-	// Change fields order
-	$fields_ordered = [];
-
+	$priority = 10;
 	foreach ($fields_order as $key)
 	{
 		if (isset($fields[$key]))
 		{
-			$fields_ordered[$key] = $fields[$key];
+			$fields[$key]['priority'] = $priority;
+			$priority += 10;
 		}
 	}
 
-	return $fields_ordered;
+	return $fields;
+});
+
+add_filter('woocommerce_default_address_fields', function($fields) {
+	return array_merge(['gender' => [
+		'type'       => 'select',
+		'label'      => __( 'Gender', 'address-autocompletion' ),
+		'options'    => [
+			'male'   => __( 'Male', 'address-autocompletion' ),
+			'female' => __( 'Female', 'address-autocompletion' )
+		]
+	]], $fields);
 });
