@@ -4,7 +4,7 @@
  * Description: Set up Endereco Address WebServices for billling and shipping address forms. Requires WooCommerce installed.
  */
 
-if (!defined('ABSPATH'))
+if(!defined('ABSPATH'))
 {
 	exit(); // Exit if accessed directly
 }
@@ -262,15 +262,21 @@ add_filter('woocommerce_get_country_locale_default', function($fields) {
 	];
 
 	$priority_shift = 10 * count($fields_order) + 10;
-	foreach ($fields as $key => &$value)
+	$priority = 10 * count($fields);
+	foreach($fields as &$value)
 	{
-		$value['priority'] = isset($value['priority']) ? $value['priority'] : 0 + $priority_shift;
+		if(!isset($value['priority']))
+		{
+			$value['priority'] = $priority;
+			$priority += 10;
+		}
+		$value['priority'] = $value['priority'] + $priority_shift;
 	}
 
 	$priority = 10;
-	foreach ($fields_order as $key)
+	foreach($fields_order as $key)
 	{
-		if (isset($fields[$key]))
+		if(isset($fields[$key]))
 		{
 			$fields[$key]['priority'] = $priority;
 			$priority += 10;
