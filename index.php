@@ -258,7 +258,7 @@ add_filter('woocommerce_get_country_locale', function($fields) {
 add_filter('woocommerce_get_country_locale_default', function($fields) {
 	$fields_order = [
 		'company', 'gender', 'first_name', 'last_name', 'country',
-		'state', 'city', 'postcode', 'address_1', 'address_2'
+		'state', 'postcode', 'city', 'address_1', 'address_2'
 	];
 
 	$priority_shift = 10 * count($fields_order) + 10;
