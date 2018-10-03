@@ -15,12 +15,12 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function ($links)
 });
 
 add_action('wp_enqueue_scripts', function () {
-	wp_enqueue_script( 'address-correction',    plugins_url() . '/address-autocompletion/js/address-correction.js', ['jquery'] );
-	wp_enqueue_script( 'autocomplete',     plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
-	wp_enqueue_script( 'bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
+	wp_enqueue_script( 'address-correction', plugins_url() . '/address-autocompletion/js/address-correction.js', ['jquery'] );
+	wp_enqueue_script( 'autocomplete',       plugins_url() . '/address-autocompletion/js/jquery.auto-complete.min.js' );
+	wp_enqueue_script( 'bootstrap',         'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js');
 
 	wp_enqueue_style( 'autocomplete',  plugins_url() . '/address-autocompletion/js/jquery.auto-complete.css' );
-	wp_enqueue_style( 'bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
+	wp_enqueue_style( 'bootstrap',    'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' );
 
 	wp_add_inline_style( 'autocomplete', ' .wrong-gender { border: 1px solid yellow; background-color: #ffff0026 !important; } ' );
 
@@ -60,6 +60,18 @@ function address_correction_get_ajax_json()
 
 	switch($sender)
 	{
+		case 'flag':
+			try
+			{
+				$client = EnderecoClient::getInstance( get_option('mandator'), get_option('user'), get_option('password') );
+				$client->doAccounting();
+			}
+			catch(Exception $exception)
+			{
+				// ignore it
+				// print_r($exception);
+			}
+			break;
 		case 'name':
 			if(!empty($name))
 			{
@@ -85,14 +97,28 @@ function address_correction_get_ajax_json()
 			}
 			break;
 		case 'address':
-			if(!empty($zip) && !empty($city) && !empty($address))
+			if(!empty($address))
 			{
 				$streetExpansionRequest = new EnderecoStreetExpansionRequest();
-				$streetExpansionRequest->setPostcode($zip);
-				$streetExpansionRequest->setCity($city);
 				$streetExpansionRequest->setStreet($address);
+				if(!empty($zip))
+				{
+					$streetExpansionRequest->setPostcode($zip);
+				}
+				if(!empty($city))
+				{
+					$streetExpansionRequest->setCity($city);
+				}
 				$data = address_correction_get_enderco_data($streetExpansionRequest);
 			}
+//			if(!empty($zip) && !empty($city) && !empty($address))
+//			{
+//				$streetExpansionRequest = new EnderecoStreetExpansionRequest();
+//				$streetExpansionRequest->setPostcode($zip);
+//				$streetExpansionRequest->setCity($city);
+//				$streetExpansionRequest->setStreet($address);
+//				$data = address_correction_get_enderco_data($streetExpansionRequest);
+//			}
 			break;
 		case 'submit':
 			$addressCheckRequest = new EnderecoAddressCheckRequest();
@@ -126,6 +152,7 @@ function address_correction_get_enderco_data($expansionRequest)
 					$data[] = [
 						'postcode' => $postCode,
 						'city'     => $city,
+						'flag'     => 1,
 					];
 				}
 			}
@@ -149,6 +176,7 @@ function address_correction_get_enderco_data($expansionRequest)
 					$data[] = [
 						'name'    => $expansion->getFirstName(),
 						'gender'  => $gender,
+						'flag'    => 1,
 					];
 				}
 				else
@@ -156,6 +184,7 @@ function address_correction_get_enderco_data($expansionRequest)
 					$data[] = [
 						'name'    => $expansionRequest->getFirstName(),
 						'gender'  => 'undefined',
+						'flag'    => 1,
 					];
 				}
 			}
@@ -169,7 +198,8 @@ function address_correction_get_enderco_data($expansionRequest)
 					$data[] = [
 						'postcode' => $postCode,
 						'city'     => $city,
-						'street'   => $street
+						'street'   => $street,
+						'flag'     => 1,
 					];
 				}
 			}
@@ -178,6 +208,7 @@ function address_correction_get_enderco_data($expansionRequest)
 	catch(Exception $exception)
 	{
 		// ignore it
+		// print_r($exception);
 	}
 	return $data;
 }

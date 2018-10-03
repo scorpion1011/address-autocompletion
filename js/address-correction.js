@@ -15,6 +15,8 @@ jQuery(function () {
     shippingCorrection.init('shipping', addressAutocompletion.shipping, blockOverlayConfig);
 
     confirmationPopup.init(function () {
+        billingCorrection.submit();
+        shippingCorrection.submit();
         mainForm.submit();
     });
 
@@ -25,12 +27,15 @@ jQuery(function () {
         jQuery.blockUI(blockOverlayConfig);
 
         if (!confirmationPopup.needConfirmation()) {
-            // allow the submit AJAX call
+            billingCorrection.submit();
+            shippingCorrection.submit();
             jQuery.unblockUI();
             return true;
         }
 
         confirmationPopup.showConfirmPopup(function () {
+            billingCorrection.submit();
+            shippingCorrection.submit();
             mainForm.submit();
         });
 
@@ -47,6 +52,7 @@ var AddressCorrection = {
     confirmationHeader: null,
     dataConfirmed:      null,
     blockOverlayConfig: null,
+    flag:               0,
     gender:             'undefined',
 
     getGenderSelect: function () {
@@ -97,9 +103,9 @@ var AddressCorrection = {
     init: function (groupPrefix, confirmationHeader, blockOverlayConfig) {
         var addressCorrection = this;
 
-        addressCorrection.groupPrefix = groupPrefix;
+        addressCorrection.groupPrefix        = groupPrefix;
         addressCorrection.confirmationHeader = confirmationHeader;
-        addressCorrection.dataConfirmed = 0;
+        addressCorrection.dataConfirmed      = 3;
         addressCorrection.blockOverlayConfig = blockOverlayConfig;
 
         addressCorrection.getCityInput().on('input', function () {
@@ -261,6 +267,9 @@ var AddressCorrection = {
             }
             jQuery.each(responseJson, function (key, value) {
                 arrayOfObjectProperty.push(value);
+                if('flag' in value && 1 == value['flag']) {
+                    addressCorrection.flag = 1;
+                }
             });
             onSuccess(arrayOfObjectProperty);
         })
@@ -322,6 +331,12 @@ var AddressCorrection = {
             catch (err) {
                 addressCorrection.log('Can\'t parse the server response.');
             }
+
+            jQuery.each(responseJson, function (key, value) {
+                if('flag' in value && 1 == value['flag']) {
+                    addressCorrection.flag = 1;
+                }
+            });
 
             if (responseJson.length == 0 || responseJson.length == 1 && responseJson[0].city == data.city && responseJson[0].postcode == data.zip && responseJson[0].street == data.address) {
                 addressCorrection.disable();
@@ -386,6 +401,22 @@ var AddressCorrection = {
 
     escapeString: function (str) {
         return jQuery('<div>').text(str).html();
+    },
+    
+    submit: function() {
+        var addressCorrection = this;
+        
+        if(1 == addressCorrection.flag) {
+            var data = { action: 'action', sender: 'flag' };
+            jQuery.get(
+                addressAutocompletion.ajaxurl,
+                data,
+                function (response) {
+                    addressCorrection.log('Response is : ' + response);
+                });
+            addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
+            addressCorrection.flag = 0;
+        }
     }
 
 };
