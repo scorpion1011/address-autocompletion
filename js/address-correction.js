@@ -252,9 +252,6 @@ var AddressCorrection = {
     request: function (element, data, onSuccess) {
         var addressCorrection = this;
 
-        var parent = element.parent();
-        parent.block(addressCorrection.blockOverlayConfig);
-
         var xhr = jQuery.get(addressAutocompletion.ajaxurl, data, function (response) {
             addressCorrection.log('Response is : ' + response);
             var arrayOfObjectProperty = [];
@@ -275,9 +272,6 @@ var AddressCorrection = {
         })
         .fail(function () {
             addressCorrection.log('Request has been cancelled.');
-        })
-        .always(function () {
-            parent.unblock();
         });
         addressCorrection.log('Request has been sent. ' + addressCorrection.compileUrl(data));
 
