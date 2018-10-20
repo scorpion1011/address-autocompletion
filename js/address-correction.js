@@ -246,7 +246,7 @@ var AddressCorrection = {
                     addressCorrection.dataConfirmed = 2;
                 }
                 e.originalEvent.stopImmediatePropagation();
-                e.originalEvent.returnValue = false;
+                e.originalEvent.preventDefault();
             }
         };
     },
