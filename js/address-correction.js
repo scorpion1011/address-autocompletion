@@ -245,6 +245,8 @@ var AddressCorrection = {
                     addressCorrection.getZipInput() .val(jQuery(item).attr('data-postcode'));
                     addressCorrection.dataConfirmed = 2;
                 }
+                e.originalEvent.stopImmediatePropagation();
+                e.originalEvent.returnValue = false;
             }
         };
     },
